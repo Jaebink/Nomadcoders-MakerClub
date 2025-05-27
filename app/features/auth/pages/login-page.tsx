@@ -46,7 +46,7 @@ export default function LoginPage() {
           </div>
 
           <div className="text-sm">
-            <Link to="/auth/otp/start" className="font-medium text-indigo-600 hover:text-indigo-500">
+            <Link to="/auth/find-password/start" className="font-medium text-indigo-600 hover:text-indigo-500">
               비밀번호를 잊으셨나요?
             </Link>
           </div>
