@@ -1,4 +1,60 @@
-import { Form, Link } from "react-router";
+import type { Route } from "./+types/join-page";
+import { makeSSRClient } from "~/supa-client";
+import { Form, Link, redirect } from "react-router";
+import { z } from "zod";
+
+const formSchema = z.object({
+  email: z.string({
+      required_error: "Email is required",
+      invalid_type_error: "Email should be a string",
+  }).email("Invalid email address"),
+  password: z.string({
+      required_error: "Password is required",
+  }).min(8, { message: "Password must be at least 8 characters long" }),
+});
+
+export const action = async ({ request }: Route.ActionArgs) => {
+  const formData = await request.formData();
+  const { success, data, error } = formSchema.safeParse(Object.fromEntries(formData));
+  if (!success) {
+      return {
+          formError: error.flatten().fieldErrors,
+      };
+  }
+  // const usernameExists = await checkUsernameExists(request, { username: data.username });
+  // if (usernameExists) {
+  //     return {
+  //         formError: {
+  //             username: ["Username already exists"],
+  //         },
+  //     };
+  // }
+  const { client, headers } = makeSSRClient(request);
+  const { error: signUpError } = await client.auth.signUp({
+      email: data.email,
+      password: data.password,
+      // options: {
+      //     data: {
+      //         name: data.name,
+      //         username: data.username,
+      //         role: data.role,
+      //     },
+      // },
+  });
+  if (signUpError) {
+      console.error('SignUp Error:', {
+          message: signUpError.message,
+          name: signUpError.name,
+          // status: signUpError.status,
+          // details: signUpError.details,
+          data: data  // 실제 전송된 데이터 확인
+      });
+      return {
+          signUpError: `${signUpError.message} (${signUpError.name})`,
+      };
+  }
+  return redirect("/room", { headers });
+};
 
 export default function JoinPage() {
   return (

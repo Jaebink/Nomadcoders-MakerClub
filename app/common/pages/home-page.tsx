@@ -34,7 +34,7 @@ export default function HomePage() {
                         onClick={() => navigate('/auth/join')}
                     >
                         고민 해결사 등록하기
-                    </button>                    
+                    </button>
                 </div>
             </div>
         </div>

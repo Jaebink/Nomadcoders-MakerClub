@@ -2,10 +2,12 @@ import { type RouteConfig, index, layout, prefix, route } from "@react-router/de
 
 export default [
     index("common/pages/home-page.tsx"),
-	route("/room/:roomId", "features/room/pages/room-page.tsx"),
-	layout("features/channel/layouts/channel-layout.tsx", [
-		index("features/channel/pages/channels-page.tsx"),
-		route("/:channelId", "features/channel/pages/channel-page.tsx"),
+	route("/room", "features/room/pages/room-page.tsx"),
+	layout("features/channels/layouts/channel-layout.tsx", [
+		...prefix("channels", [
+			index("features/channels/pages/channels-page.tsx"),
+			route("/:channelId", "features/channels/pages/channel-page.tsx"),
+		]),
 	]),
     ...prefix("auth", [
 		layout("features/auth/layouts/auth-layout.tsx", [

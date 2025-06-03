@@ -1,67 +1,98 @@
-import { Form, Link } from "react-router";
+import type { Route } from "./+types/login-page";
+import InputPair from "~/common/components/input-pair";
+import { Form, Link, redirect } from "react-router";
+import { LoadingButton } from "~/common/components/loading-button";
+import { z } from "zod";
+import { makeSSRClient } from "~/supa-client";
 
-export default function LoginPage() {
+const formSchema = z.object({
+  email: z.string({
+      required_error: "Email is required",
+      invalid_type_error: "Email should be a string",
+  }).email("Invalid email address"),
+  password: z.string({
+      required_error: "Password is required",
+  }).min(8, { message: "Password must be at least 8 characters long" }),
+});
+
+export const action = async ({ request }: Route.ActionArgs) => {
+  const formData = await request.formData();
+  const { success, data, error } = formSchema.safeParse(Object.fromEntries(formData));
+  if (!success) {
+    return {
+      loginError: null,
+      formError: error.flatten().fieldErrors,
+    };
+  }
+  const { email, password } = data;
+  const { client, headers } = makeSSRClient(request);
+  const { error: loginError } = await client.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (loginError) {
+      return {
+        loginError: loginError.message,
+        formError: null,
+      };
+    }
+  return redirect("/room", { headers });
+};
+
+export default function LoginPage({ actionData }: Route.ComponentProps) {
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-900 text-center">로그인</h2>
-      <Form className="mt-8 space-y-6" method="post">
-        <div className="rounded-md shadow-sm -space-y-px">
-          <div>
-            <label htmlFor="email" className="sr-only">이메일</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="이메일 주소"
-            />
-          </div>
-          <div>
-            <label htmlFor="password" className="sr-only">비밀번호</label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="비밀번호"
-            />
-          </div>
+      <Form className="w-full space-y-4" method="post">
+        <InputPair
+            id="email"
+            label="Email"
+            description="Enter your email address"
+            name="email"
+            required
+            type="email"
+            placeholder="i.e wemake@example.com"
+        />
+        {actionData && "formError" in actionData && (
+            <p className="text-sm text-red-500">{actionData.formError?.email?.join(", ")}</p>
+        )}
+        <InputPair
+            id="password"
+            label="Password"
+            description="Enter your password"
+            name="password"
+            required
+            type="password"
+            placeholder="Enter your password"
+        />
+        {actionData && "formError" in actionData && (
+            <p className="text-sm text-red-500">{actionData.formError?.password?.join(", ")}</p>
+        )}                    
+        <LoadingButton text="Login" />
+        {actionData && "loginError" in actionData && (
+            <p className="text-sm text-red-500">{actionData.loginError}</p>
+        )}                    
+    </Form>
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <input
+            id="remember-me"
+            name="remember-me"
+            type="checkbox"
+            className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+          />
+          <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+            로그인 상태 유지
+          </label>
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            <input
-              id="remember-me"
-              name="remember-me"
-              type="checkbox"
-              className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
-            />
-            <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
-              로그인 상태 유지
-            </label>
-          </div>
-
-          <div className="text-sm">
-            <Link to="/auth/find-password/start" className="font-medium text-indigo-600 hover:text-indigo-500">
-              비밀번호를 잊으셨나요?
-            </Link>
-          </div>
+        <div className="text-sm">
+          <Link to="/auth/find-password/start" className="font-medium text-indigo-600 hover:text-indigo-500">
+            비밀번호를 잊으셨나요?
+          </Link>
         </div>
-
-        <div>
-          <button
-            type="submit"
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            로그인
-          </button>
-        </div>
-      </Form>
-      
+      </div>      
       <div className="mt-6">
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
