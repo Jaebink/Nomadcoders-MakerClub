@@ -15,8 +15,7 @@ export default function Navigation({
 
     const navItems = [
         { path: '/room', label: '홈', icon: <House /> },
-        { path: '/channels', label: '채널', icon: <UsersRound /> },
-        { path: '/profile', label: '프로필', icon: <CircleUserRound /> }
+        { path: '/channels', label: '채널', icon: <UsersRound /> }
     ];
 
     // 각 네비게이션 아이템의 ref 배열 생성
@@ -66,13 +65,13 @@ export default function Navigation({
                         >
                             <Link 
                                 to={item.path}
-                                className="flex items-center justify-center ml-6 group/nav-item w-full"
+                                className="flex items-center justify-center group/nav-item w-full"
                                 style={{ height: "48px" }}
                             >
                                 <div className={`w-6 h-6 transition-colors ${isActive(item.path) ? 'text-yellow-400' : 'text-white hover:text-yellow-400'}`}>
                                     {item.icon}
                                 </div>
-                                <span className={`absolute left-full ml-4 text-xs whitespace-nowrap text-white transition-all duration-200 ${
+                                <span className={`absolute left-full ml-2 text-xs whitespace-nowrap text-white transition-all duration-200 ${
                                     isActive(item.path) || hoveredPath === item.path ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
                                 }`}>
                                     {item.label}
@@ -82,6 +81,34 @@ export default function Navigation({
                         ))}
                     </div>
                 </div>
+            </div>
+            <div
+                className="mb-8 last:mb-0 items-center w-full"
+                ref={el => {
+                    if (el) itemRefs.current[navItems.length] = el;
+                }}
+                onMouseEnter={() => {
+                    setHoveredPath('/profile');
+                }}
+                onMouseLeave={() => {
+                    setHoveredPath('');
+                }}
+                style={{ position: "relative" }}
+            >
+                <Link 
+                    to={'/profile'}
+                    className="flex items-center justify-center group/nav-item w-full"
+                    style={{ height: "48px" }}
+                >
+                    <div className={`w-6 h-6 transition-colors ${isActive('/profile') ? 'text-yellow-400' : 'text-white hover:text-yellow-400'}`}>
+                        <CircleUserRound />
+                    </div>
+                    <span className={`absolute left-full text-xs whitespace-nowrap text-white transition-all duration-200 ${
+                        isActive('/profile') || hoveredPath === '/profile' ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
+                    }`}>
+                        프로필
+                    </span>
+                </Link>
             </div>
         </div>
     )

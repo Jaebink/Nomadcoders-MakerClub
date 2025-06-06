@@ -4,18 +4,19 @@ interface ChannelCardProps {
     id: number;
     name: string;
     description: string;
-    userIds: number[];
+    imageUrl: string;
 }
 
-export default function ChannelCard({ id, name, description, userIds }: ChannelCardProps) {
+export default function ChannelCard({ id, name, description, imageUrl }: ChannelCardProps) {
     return (
         <Link to={`/channels/${id}`}>
-            <a className="block">
-                <div className="bg-gray-800 rounded-lg p-4">
-                    <h1 className="text-white">{name}</h1>
-                    <p className="text-gray-400">{description}</p>
+            <div>
+                <img src={imageUrl} alt="channel" className="w-full h-full object-cover rounded-t-lg" />
+                <div className="bg-gray-600 rounded-b-lg p-4">
+                    <h1 className="text-white text-lg">{name}</h1>
+                    <p className="text-gray-400 text-xs">{description}</p>
                 </div>
-            </a>
+            </div>
         </Link>
     )
 }

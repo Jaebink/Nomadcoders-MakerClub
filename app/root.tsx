@@ -67,7 +67,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
           isLoggedIn={isLoggedIn}
         />
       )}
-      <div className="flex flex-1 justify-center">
+      <div className="flex flex-1 justify-center max-w-screen-xl mx-auto pt-16">
         <Outlet context={{
           isLoggedIn,
           name: loaderData.profile?.name,

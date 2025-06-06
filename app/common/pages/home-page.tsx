@@ -5,7 +5,7 @@ export default function HomePage() {
     
 
     return (
-        <div className="min-h-screen py-16 px-4 sm:px-6 lg:px-8">
+        <div>
             <div className="max-w-4xl mx-auto text-center">
                 <img src="/star-char.png" alt="Maker Club 로고" className="mx-auto h-48 w-auto mb-8" />                                
                 <div className="grid md:grid-cols-3 gap-8 mb-16">
@@ -30,7 +30,7 @@ export default function HomePage() {
                     <h2 className="text-3xl font-bold text-white">여러분의 고민을 해결사들에게 맡겨보시겠어요?</h2>
                     <p className="text-gray-300 text-lg">고민 해결사들이 여러분의 고민을 기다리고 있어요!</p>
                     <button
-                        className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-4 px-8 rounded-full text-lg hover:opacity-90 transition duration-300 transform hover:scale-105"
+                        className="cursor-pointer bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-4 px-8 rounded-full text-lg hover:opacity-90 transition duration-300 transform hover:scale-105"
                         onClick={() => navigate('/auth/join')}
                     >
                         고민 해결사 등록하기

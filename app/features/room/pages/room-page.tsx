@@ -4,6 +4,10 @@ import { makeSSRClient } from "~/supa-client";
 import PopoverForm from "~/common/components/ui/popover-form";
 import { Form } from "react-router";
 import { useState } from "react";
+import { Switch } from "~/common/components/ui/switch";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "~/common/components/ui/hover-card";
+import { cn } from "~/lib/utils";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
     const { client } = makeSSRClient(request);
@@ -23,6 +27,9 @@ export default function RoomPage({ loaderData }: Route.ComponentProps) {
     const [isReceiving, setIsReceiving] = useState(false)
     const [notifications, setNotifications] = useState<string[]>([])
     const [showSuccess, setShowSuccess] = useState(false);
+
+    const [isReceiveOpen, setIsReceiveOpen] = useState(false);
+    const [receiveConcerns, setReceiveConcerns] = useState<any[]>([]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -46,10 +53,19 @@ export default function RoomPage({ loaderData }: Route.ComponentProps) {
     return (
         <div className="flex flex-col items-center justify-center h-screen">
             <div className="text-white">
-                <h1 className="text-6xl font-bold">{loaderData.profile?.name}님 안녕하세요</h1>
-                <p className="text-2xl mt-4">고민 상담소에 오신 것을 환영합니다!</p>
-                <p className="text-xl mt-4">여기서는 당신의 고민을 익명으로 랜덤한 해결사들에게 전달할 수 있습니다.</p>
-                <p className="text-lg mt-4">또한, 당신은 다른 사람의 고민을 수신하고 해결할 수 있습니다.</p>
+                <h1 className="text-4xl font-bold">{loaderData.profile?.name}님 안녕하세요</h1>
+                <HoverCard>
+                    <HoverCardTrigger className="cursor-pointer">
+                        고민 편지 작성에 대해서
+                    </HoverCardTrigger>
+                    <HoverCardContent>
+                        <div>
+                            <p>여기서는 당신의 고민을 익명으로 랜덤한 해결사들에게 전달할 수 있습니다.</p>
+                            <p>또한, 당신은 다른 사람의 고민을 수신하고 해결할 수 있습니다.</p>
+                        </div>
+                    </HoverCardContent>
+                </HoverCard>
+                <p className="text-lg mt-4">오늘은 무슨 고민이 있어서 오셨나요?</p>
             </div>
             <PopoverForm
                 open={open}
@@ -86,7 +102,37 @@ export default function RoomPage({ loaderData }: Route.ComponentProps) {
                 title="편지 작성하기"
                 width="1000px"
                 height="400px"
-            />            
+            />
+            
+            {/* <div className="flex flex-col items-center fixed bottom-0 w-1/4">                
+                <button
+                    className="p-2 bg-gray-800 hover:bg-gray-700 transition duration-200"
+                    onClick={() => setIsReceiveOpen((prev) => !prev)}
+                >
+                    {isReceiveOpen ? <ChevronUp className="text-white" /> : <ChevronDown className="text-white" />}
+                </button>
+                <div className="flex flex-row items-center bg-gray-200 h-60 w-200">
+                    <p>고민1</p>
+                    <p>고민2</p>
+                    <p>고민3</p>
+                </div>
+            </div> */}
+            <div className={`flex flex-col items-center fixed bottom-0 transition-transform duration-300 ease-in-out ${isReceiveOpen ? 'translate-y-0' : 'translate-y-[calc(100%-3.5rem)]'}`}>
+                <div className="flex items-center justify-center h-10 px-4 gap-4">
+                    <button className="px-4 py-1 bg-gray-600 hover:bg-gray-500 transition duration-200 rounded-t-md" onClick={() => setIsReceiveOpen((prev) => !prev)}>
+                        {isReceiveOpen ? <ChevronUp className="text-white" /> : <ChevronDown className="text-white" />}
+                    </button>
+                    <div className="flex items-center absolute right-0 bg-gray-200 gap-2" >
+                        <p>고민 해결사로 일하기</p>
+                        <Switch />
+                    </div>
+                </div>
+                <div className="flex flex-row items-center bg-gray-200 h-60 w-300 rounded-t-lg">
+                    <p>고민1</p>
+                    <p>고민2</p>
+                    <p>고민3</p>
+                </div>
+            </div>
         </div>
     )
 }

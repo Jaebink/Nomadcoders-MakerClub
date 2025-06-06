@@ -6,6 +6,7 @@ export default [
 	layout("features/channels/layouts/channel-layout.tsx", [
 		...prefix("channels", [
 			index("features/channels/pages/channels-page.tsx"),
+			route("/create", "features/channels/pages/channel-create-page.tsx"),
 			route("/:channelId", "features/channels/pages/channel-page.tsx"),
 		]),
 	]),
@@ -24,4 +25,5 @@ export default [
 		]),
 		route("/logout", "features/auth/pages/logout-page.tsx"),
 	]),
+	route("/profile", "features/profile/pages/profile-page.tsx"),
 ] satisfies RouteConfig;
