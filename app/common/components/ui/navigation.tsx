@@ -8,7 +8,12 @@ export default function Navigation({
     isLoggedIn: boolean,
 }) {
     const location = useLocation();
-    const isActive = (path: string) => location.pathname === path;
+    const isActive = (path: string) => {
+        if (path === '/channels') {
+            return location.pathname.startsWith('/channels');
+        }
+        return location.pathname === path;
+    };
     const [hoveredPath, setHoveredPath] = useState('');
     const [markPosition, setMarkPosition] = useState<number|null>(null);
 

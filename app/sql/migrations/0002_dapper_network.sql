@@ -1,0 +1,2 @@
+ALTER TABLE "channels" ALTER COLUMN "channel_id" SET DATA TYPE bigint USING "channel_id"::bigint;--> statement-breakpoint
+ALTER TABLE "channels" ALTER COLUMN "channel_id" ADD GENERATED ALWAYS AS IDENTITY (sequence name "channels_channel_id_seq" INCREMENT BY 1 MINVALUE 1 MAXVALUE 9223372036854775807 START WITH 1 CACHE 1);

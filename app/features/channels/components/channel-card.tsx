@@ -5,12 +5,14 @@ interface ChannelCardProps {
     name: string;
     description: string;
     imageUrl: string;
+    className?: string;
+    disabled?: boolean;
 }
 
-export default function ChannelCard({ id, name, description, imageUrl }: ChannelCardProps) {
+export default function ChannelCard({ id, name, description, imageUrl, className, disabled }: ChannelCardProps) {
     return (
-        <Link to={`/channels/${id}`}>
-            <div>
+        <Link to={`/channels/${id}`} style={{ pointerEvents: disabled ? 'none' : 'auto'}}>
+            <div className={className}>
                 <img src={imageUrl} alt="channel" className="w-full h-full object-cover rounded-t-lg" />
                 <div className="bg-gray-600 rounded-b-lg p-4">
                     <h1 className="text-white text-lg">{name}</h1>

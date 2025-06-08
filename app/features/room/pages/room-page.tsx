@@ -82,8 +82,8 @@ export default function RoomPage({ loaderData }: Route.ComponentProps) {
                     <Form onSubmit={handleSubmit} className="space-y-4 p-4">
                         <textarea
                             placeholder="당신의 편지를 작성해주세요..."
-                            value={concern}
                             onChange={(e) => setConcern(e.target.value)}
+                            value={concern}
                             className="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                             rows={8}
                         />

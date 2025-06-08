@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      channels: {
+        Row: {
+          channel_id: number
+          created_at: string
+          description: string
+          image: string
+          name: string
+          owner_id: string
+          updated_at: string
+        }
+        Insert: {
+          channel_id?: never
+          created_at?: string
+          description: string
+          image: string
+          name: string
+          owner_id: string
+          updated_at?: string
+        }
+        Update: {
+          channel_id?: never
+          created_at?: string
+          description?: string
+          image?: string
+          name?: string
+          owner_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channels_owner_id_profiles_profile_id_fk"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
       concern_letters: {
         Row: {
           content: string
