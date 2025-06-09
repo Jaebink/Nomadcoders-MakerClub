@@ -8,6 +8,7 @@ import z from "zod";
 import { createChannel } from "../mutations";
 import { makeSSRClient } from "~/supa-client";
 import { getLoggedInUserId } from "~/features/users/queries";
+import { Textarea } from "~/common/components/ui/textarea";
 
 const formSchema = z.object({
     name: z.string().min(1),
@@ -64,7 +65,7 @@ export default function ChannelCreatePage({ actionData }: Route.ComponentProps) 
                     setDescription(e.target.value);
                 }} />
                 <InputPair id="image" name="image" label="채널 이미지" type="file" description="채널 이미지를 업로드해주세요." required onChange={(e) => {
-                    const file = e.target.files?.[0];
+                    const file = (e.target as HTMLInputElement).files?.[0];
                     if (file) {
                         setPreview(URL.createObjectURL(file));
                     }
