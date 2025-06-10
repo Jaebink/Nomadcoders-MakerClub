@@ -41,3 +41,15 @@ export const getLoggedInUserId = async (client: SupabaseClient<Database>) => {
     }
     return data.user.id;
 };
+
+export const getLettersByReceiverId = async (client: SupabaseClient<Database>, { id }: { id: string }) => {
+    const { data, error } = await client
+        .from("concern_letters")
+        .select("*")
+        .eq("receiver_id", id)
+        .order("created_at", { ascending: false });
+    if (error) {
+        throw error;
+    }
+    return data;
+};

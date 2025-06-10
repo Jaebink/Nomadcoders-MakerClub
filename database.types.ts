@@ -49,6 +49,7 @@ export type Database = {
       }
       concern_letters: {
         Row: {
+          channel_id: number | null
           content: string
           created_at: string
           letter_id: number
@@ -58,6 +59,7 @@ export type Database = {
           title: string
         }
         Insert: {
+          channel_id?: number | null
           content: string
           created_at?: string
           letter_id?: number
@@ -67,6 +69,7 @@ export type Database = {
           title: string
         }
         Update: {
+          channel_id?: number | null
           content?: string
           created_at?: string
           letter_id?: number
@@ -76,6 +79,13 @@ export type Database = {
           title?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "concern_letters_channel_id_channels_channel_id_fk"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["channel_id"]
+          },
           {
             foreignKeyName: "concern_receiver_id_profiles_profile_id_fk"
             columns: ["receiver_id"]

@@ -1,21 +1,23 @@
 import type { Route } from "./+types/room-page";
-import { getLoggedInUserId, getUserById } from "~/features/users/queries";
+import { getLettersByReceiverId, getLoggedInUserId, getUserById } from "~/features/users/queries";
 import { makeSSRClient } from "~/supa-client";
 import PopoverForm from "~/common/components/ui/popover-form";
 import { Form } from "react-router";
 import { useState } from "react";
 import { Switch } from "~/common/components/ui/switch";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "~/common/components/ui/hover-card";
-import { cn } from "~/lib/utils";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import { StarWithLetter } from "../components/star-with-letter";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
     const { client } = makeSSRClient(request);
     const userId = await getLoggedInUserId(client);
     const profile = await getUserById(client, { id: userId });
+    const letters = await getLettersByReceiverId(client, { id: userId });
     return {
         userId, 
         profile,
+        letters,
     };
 };
 
@@ -24,12 +26,11 @@ export default function RoomPage({ loaderData }: Route.ComponentProps) {
     const [concern, setConcern] = useState('')
     const [isSending, setIsSending] = useState(false)
     const [message, setMessage] = useState('')
-    const [isReceiving, setIsReceiving] = useState(false)
-    const [notifications, setNotifications] = useState<string[]>([])
     const [showSuccess, setShowSuccess] = useState(false);
 
     const [isReceiveOpen, setIsReceiveOpen] = useState(false);
-    const [receiveConcerns, setReceiveConcerns] = useState<any[]>([]);
+
+    const [letters, setLetters] = useState(loaderData.letters);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -50,8 +51,33 @@ export default function RoomPage({ loaderData }: Route.ComponentProps) {
             setIsSending(false)
         }
     }
+
+    /*
+     * 채널 연결 코드 *
+    useEffect(() => {
+            const changes = browserClient
+                .channel(
+                    `room:${userId}-${loaderData.participants[0].profile.profile_id}`
+                )
+                .on(
+                    "postgres_changes",
+                    { event: "INSERT", schema: "public", table: "messages" },
+                    (payload) => {
+                    setMessages((prev) => [
+                        ...prev,
+                        payload.new as Database["public"]["Tables"]["messages"]["Row"],
+                    ]);
+                    }
+                )
+                .subscribe();
+            return () => {
+                changes.unsubscribe();
+            };
+        }, [userId, loaderData.participants[0].profile.profile_id]);
+     */
+    
     return (
-        <div className="flex flex-col items-center justify-center h-screen">
+        <div className="flex flex-col items-center space-y-40">
             <div className="text-white">
                 <h1 className="text-4xl font-bold">{loaderData.profile?.name}님 안녕하세요</h1>
                 <HoverCard>
@@ -102,35 +128,21 @@ export default function RoomPage({ loaderData }: Route.ComponentProps) {
                 title="편지 작성하기"
                 width="1000px"
                 height="400px"
-            />
-            
-            {/* <div className="flex flex-col items-center fixed bottom-0 w-1/4">                
-                <button
-                    className="p-2 bg-gray-800 hover:bg-gray-700 transition duration-200"
-                    onClick={() => setIsReceiveOpen((prev) => !prev)}
-                >
-                    {isReceiveOpen ? <ChevronUp className="text-white" /> : <ChevronDown className="text-white" />}
-                </button>
-                <div className="flex flex-row items-center bg-gray-200 h-60 w-200">
-                    <p>고민1</p>
-                    <p>고민2</p>
-                    <p>고민3</p>
-                </div>
-            </div> */}
+            />        
             <div className={`flex flex-col items-center fixed bottom-0 transition-transform duration-300 ease-in-out ${isReceiveOpen ? 'translate-y-0' : 'translate-y-[calc(100%-3.5rem)]'}`}>
                 <div className="flex items-center justify-center h-10 px-4 gap-4">
                     <button className="px-4 py-1 bg-gray-600 hover:bg-gray-500 transition duration-200 rounded-t-md" onClick={() => setIsReceiveOpen((prev) => !prev)}>
-                        {isReceiveOpen ? <ChevronUp className="text-white" /> : <ChevronDown className="text-white" />}
+                        {isReceiveOpen ? <ChevronDown className="text-white" /> : <ChevronUp className="text-white" />}
                     </button>
                     <div className="flex items-center absolute right-0 bg-gray-200 gap-2" >
                         <p>고민 해결사로 일하기</p>
                         <Switch />
                     </div>
                 </div>
-                <div className="flex flex-row items-center bg-gray-200 h-60 w-300 rounded-t-lg">
-                    <p>고민1</p>
-                    <p>고민2</p>
-                    <p>고민3</p>
+                <div className="flex flex-row items-center bg-gray-200 p-4 gap-40 h-60 w-300 rounded-t-lg">
+                    {letters.map((letter) => (
+                        <StarWithLetter letter={letter} />
+                    ))}
                 </div>
             </div>
         </div>
