@@ -1,7 +1,11 @@
-.env
 .DS_Store
 /node_modules/
+
+# Environment variables
+.env
 
 # React Router
 /.react-router/
 /build/
+
+react-email-starter/node_modules/

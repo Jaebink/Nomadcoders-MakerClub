@@ -26,4 +26,7 @@ export default [
 		route("/logout", "features/auth/pages/logout-page.tsx"),
 	]),
 	route("/profile", "features/profile/pages/profile-page.tsx"),
+	...prefix("api", [
+		route("/welcome", "features/api/pages/welcome-page.tsx"),
+	]),
 ] satisfies RouteConfig;
