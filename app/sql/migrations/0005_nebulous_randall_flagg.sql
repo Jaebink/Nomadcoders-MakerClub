@@ -1,0 +1,1 @@
+ALTER POLICY "channel-select-policy" ON "channels" TO authenticated USING (true);

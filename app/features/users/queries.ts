@@ -42,11 +42,11 @@ export const getLoggedInUserId = async (client: SupabaseClient<Database>) => {
     return data.user.id;
 };
 
-export const getLettersByReceiverId = async (client: SupabaseClient<Database>, { id }: { id: string }) => {
+export const getLettersByReceiverId = async (client: SupabaseClient<Database>, { userId }: { userId : string }) => {
     const { data, error } = await client
         .from("concern_letters")
         .select("*")
-        .eq("receiver_id", id)
+        .contains("receivers", JSON.stringify([{ id: userId }]))
         .order("created_at", { ascending: false });
     if (error) {
         throw error;

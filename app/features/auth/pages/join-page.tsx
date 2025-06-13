@@ -2,6 +2,9 @@ import type { Route } from "./+types/join-page";
 import { makeSSRClient } from "~/supa-client";
 import { Form, Link, redirect } from "react-router";
 import { z } from "zod";
+import { useState } from "react";
+import { EyeIcon } from "lucide-react";
+import { EyeOffIcon } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string({
@@ -33,13 +36,12 @@ export const action = async ({ request }: Route.ActionArgs) => {
   const { error: signUpError } = await client.auth.signUp({
       email: data.email,
       password: data.password,
-      // options: {
-      //     data: {
-      //         name: data.name,
-      //         username: data.username,
-      //         role: data.role,
-      //     },
-      // },
+      options: {
+          data: {
+              name: 'anonymous',
+              username: 'mr.' + Math.random().toString(36).substring(2, 15),
+          },
+      },
   });
   if (signUpError) {
       console.error('SignUp Error:', {
@@ -57,6 +59,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
 };
 
 export default function JoinPage() {
+  const [showPassword, setShowPassword] = useState(false);
   return (
     <div>
       <h2 className="text-2xl font-bold text-gray-900 text-center">고민 해결사로 함께해요</h2>
@@ -77,17 +80,24 @@ export default function JoinPage() {
               placeholder="이메일 주소"
             />
           </div>
-          <div>
+          <div className="relative">
             <label htmlFor="password" className="sr-only">비밀번호</label>
             <input
               id="password"
               name="password"
-              type="password"
+              type={showPassword ? "text" : "password"}
               autoComplete="new-password"
               required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+              className="appearance-none rounded-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
               placeholder="비밀번호 (8자 이상)"
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
+            >
+              {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
+            </button>
           </div>
           <div>
             <label htmlFor="confirm-password" className="sr-only">비밀번호 확인</label>
@@ -167,8 +177,8 @@ export default function JoinPage() {
       
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
-          이미 해결사이신가요?{' '}
-          <Link to="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+          이미 해결사이신가요?
+          <Link to="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500 ml-2 ">
             로그인
           </Link>
         </p>

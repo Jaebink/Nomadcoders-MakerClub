@@ -53,8 +53,7 @@ export type Database = {
           content: string
           created_at: string
           letter_id: number
-          receiver_id: string
-          seen: boolean
+          receivers: Json
           sender_id: string
           title: string
         }
@@ -63,8 +62,7 @@ export type Database = {
           content: string
           created_at?: string
           letter_id?: number
-          receiver_id: string
-          seen?: boolean
+          receivers: Json
           sender_id: string
           title: string
         }
@@ -73,8 +71,7 @@ export type Database = {
           content?: string
           created_at?: string
           letter_id?: number
-          receiver_id?: string
-          seen?: boolean
+          receivers?: Json
           sender_id?: string
           title?: string
         }
@@ -85,13 +82,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "channels"
             referencedColumns: ["channel_id"]
-          },
-          {
-            foreignKeyName: "concern_receiver_id_profiles_profile_id_fk"
-            columns: ["receiver_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["profile_id"]
           },
           {
             foreignKeyName: "concern_sender_id_profiles_profile_id_fk"
@@ -131,10 +121,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      active_receivers: {
+        Row: {
+          created_at: string | null
+          letter_id: number | null
+          seen: boolean | null
+          seen_at: string | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
-      [_ in never]: never
+      get_random_active_receivers: {
+        Args: { num_limit?: number }
+        Returns: {
+          id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

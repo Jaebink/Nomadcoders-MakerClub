@@ -9,8 +9,6 @@ type PopoverFormProps = {
   openChild?: ReactNode
   successChild?: ReactNode
   showSuccess: boolean
-  width?: string
-  height?: string
   showCloseButton?: boolean
   title: string
 }
@@ -21,8 +19,6 @@ export function PopoverForm({
   openChild,
   showSuccess,
   successChild,
-  width = "364px",
-  height = "192px",
   title = "Feedback",
   showCloseButton = false,
 }: PopoverFormProps) {
@@ -48,7 +44,7 @@ export function PopoverForm({
             layoutId={`${title}-wrapper`}
             className="absolute p-1 overflow-hidden bg-muted shadow-[0_0_0_1px_rgba(0,0,0,0.08),0px_1px_2px_rgba(0,0,0,0.04)] outline-none"
             ref={ref}
-            style={{ borderRadius: 10, width, height }}
+            style={{ borderRadius: 10 }}
           >
             <motion.span
               aria-hidden

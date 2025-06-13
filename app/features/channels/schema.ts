@@ -16,6 +16,7 @@ export const channels = pgTable("channels", {
         for: "select",
         to: authenticatedRole,
         as: "permissive",
+        using: sql`true`,
     }),
     pgPolicy("channel-insert-policy", {
         for: "insert",

@@ -1,4 +1,4 @@
-import { bigint, boolean, jsonb, pgEnum, pgPolicy, pgSchema, pgTable, primaryKey, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, jsonb, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { authenticatedRole, authUsers, authUid } from "drizzle-orm/supabase"
 import { channels } from "../channels/schema";
 import { sql } from "drizzle-orm"
@@ -48,12 +48,14 @@ export const concernLetters = pgTable("concern_letters", {
     sender_id: uuid().references(() => profiles.profile_id, {
         onDelete: "cascade",
     }).notNull(),
-    receiver_id: uuid().references(() => profiles.profile_id, {
-        onDelete: "cascade",
-    }).notNull(),
+    receivers: jsonb().$type<Array<{
+        user_id: string;
+        seen: boolean;
+        seen_at?: string | null;
+        is_active: boolean;
+    }>>().notNull().default([]),
     title: text().notNull(),
     content: text().notNull(),
-    seen: boolean().notNull().default(false),
     created_at: timestamp().notNull().defaultNow(),
     channel_id: bigint({ mode: "number" }).references(() => channels.channel_id, {
         onDelete: "cascade",
@@ -63,7 +65,7 @@ export const concernLetters = pgTable("concern_letters", {
         for: "select",
         to: authenticatedRole,
         as: "permissive",
-        using: sql`${authUid} = ${table.sender_id} or ${authUid} = ${table.receiver_id}`,
+        using: sql`${authUid} = ${table.sender_id} or ${authUid} in ${table.receivers}`,
     }),
     pgPolicy("concern-letter-insert-policy", {
         for: "insert",
