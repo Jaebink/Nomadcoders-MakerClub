@@ -1,6 +1,7 @@
 import { AnimatedModal } from "~/common/components/ui/animated-modal"
+import type { Database } from "~/supa-client";
 
-export const StarWithLetter = ({ letter }: { letter: any }) => {
+export const StarWithLetter = ({ letter }: { letter: Database["public"]["Tables"]["concern_letters"]["Row"] }) => {
     return (
         <div key={letter.letter_id} className="relative">
             <img src="/letter.png" alt="" className="size-50" />

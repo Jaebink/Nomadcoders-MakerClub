@@ -5,6 +5,11 @@ import { createClient } from "@supabase/supabase-js";
 
 export type Database = SupabaseDatabase
 
+export const browserClient = createBrowserClient<Database>(
+    "https://xcojeabbrrvkkfvwduoj.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inhjb2plYWJicnJ2a2tmdndkdW9qIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDgzNTk2MzYsImV4cCI6MjA2MzkzNTYzNn0.f1hxfNB9kg60vCv-XTXMAHHPX14-tlH5BGTmsKamltY"
+);
+
 export const makeSSRClient = (request: Request) => {
     const headers = new Headers();
     const serverSideClient = createServerClient<Database>(

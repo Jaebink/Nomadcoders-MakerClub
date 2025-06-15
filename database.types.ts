@@ -139,6 +139,13 @@ export type Database = {
           id: string
         }[]
       }
+      get_random_active_users: {
+        Args: { num_limit?: number; sender_id?: string }
+        Returns: {
+          id: string
+          username: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never

@@ -1,11 +1,14 @@
 import { Link, useLocation } from "react-router";
 import { House, UsersRound, CircleUserRound } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { cn } from "~/lib/utils";
 
 export default function Navigation({
     isLoggedIn,
+    className,
 }: {
     isLoggedIn: boolean,
+    className?: string,
 }) {
     const location = useLocation();
     const isActive = (path: string) => {
@@ -35,7 +38,7 @@ export default function Navigation({
     }, [location.pathname]);
 
     return (
-        <div className="fixed left-0 top-0 h-full w-16 flex flex-col items-center p-0">
+        <div className={cn("fixed left-0 top-0 h-full w-16 flex flex-col items-center p-0", className)}>
             <div className="text-white mb-8">로고</div>
             <div className="flex-1 w-full flex flex-col justify-center items-center">
                 {/* 네비게이션 아이템들과 마크를 같은 relative flex-col 컨테이너에 배치 */}

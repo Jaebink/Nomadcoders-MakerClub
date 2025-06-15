@@ -1,7 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "~/supa-client";
 
-export const sendLetter = async (client: SupabaseClient<Database>, { senderId, receivers, title, content, channelId = null }: { senderId: string, receivers: string[], title: string, content: string, channelId?: number | null }) => {
+export const sendLetter = async (client: SupabaseClient<Database>, { senderId, receivers, title, content, channelId = null }: { senderId: string, receivers: { user_id: string; is_active: boolean; seen: boolean; seen_at: string | null; }[], title: string, content: string, channelId?: number | null }) => {
     const { data, error: insertError } = await client
         .from('concern_letters')
         .insert({
@@ -18,15 +18,13 @@ export const sendLetter = async (client: SupabaseClient<Database>, { senderId, r
         console.error("Error inserting concern letter:", insertError);
         throw insertError;
     }
-    
-    console.log(`Letter sent to ${receivers.length} active receiver(s).`);
 
-    return data?.letter_id; // 삽입된 편지의 ID를 반환 (옵션)
+    return data?.letter_id;
 };
 
-export const getRandomActiveReceiverIds = async (client: SupabaseClient<Database>, limit: number = 5): Promise<string[]> => {
+export const getRandomActiveReceiverIds = async (client: SupabaseClient<Database>, limit: number = 5, senderId: string): Promise<{ user_id: string, username: string }[]> => {
     const { data, error: selectError } = await client
-        .rpc('get_random_active_receivers', { num_limit: limit }); // RPC 함수 호출
+        .rpc('get_random_active_users', { num_limit: limit, sender_id: senderId });
 
     if (selectError) {
         console.error("Error fetching random active receivers using RPC:", selectError);
@@ -35,20 +33,8 @@ export const getRandomActiveReceiverIds = async (client: SupabaseClient<Database
 
     if (!data || data.length === 0) {
         console.warn("No active receivers found.");
-        return []; // 수신자가 없으면 빈 배열 반환
+        return [];
     }
 
-    // RPC 함수가 { id: '...' } 형태의 배열을 반환한다고 가정
-    return data.map(item => item.id);
-};
-
-export const getReceiverIdinActive = async (client: SupabaseClient<Database>) => {
-    const { data, error } = await client
-        .from('active_receivers')
-        .select('user_id')
-        .order('created_at', { ascending: false })
-    if (error) {
-        throw error;
-    }
-    return data ? data.map(item => item.user_id) : [];
+    return data.map(item => ({ user_id: item.id, username: item.username }));
 };

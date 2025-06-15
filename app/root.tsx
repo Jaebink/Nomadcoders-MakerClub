@@ -14,6 +14,9 @@ import Navigation from "./common/components/ui/navigation";
 import { makeSSRClient } from "./supa-client";
 import { getUserById } from "./features/users/queries";
 
+import { StarsBackground } from "./common/components/ui/stars-backgroun";
+import { ShootingStars } from "./common/components/ui/shooting-stars";
+
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
   {
@@ -61,13 +64,16 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const { pathname } = useLocation();
   const isLoggedIn = loaderData.user !== null;
   return (
-    <div className="flex min-h-screen bg-gray-900 relative">
+    <div className="min-h-screen bg-gray-900 relative p-6">
+      <StarsBackground />
+      <ShootingStars starColor="orange" starWidth={10} starHeight={2} />
       {(pathname === "/" || pathname.includes("/auth")) ? null : (
         <Navigation
           isLoggedIn={isLoggedIn}
+          className="z-10"
         />
       )}
-      <div className="flex flex-1 justify-center max-w-screen-xl mx-auto pt-16">
+      <div className="flex flex-1 justify-center max-w-screen-xl mx-auto pt-16 z-10">
         <Outlet context={{
           isLoggedIn,
           name: loaderData.profile?.name,

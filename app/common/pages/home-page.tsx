@@ -6,8 +6,8 @@ export default function HomePage() {
 
     return (
         <div>
-            <div className="max-w-4xl mx-auto text-center">
-                <img src="/star-char.png" alt="Maker Club 로고" className="mx-auto h-48 w-auto mb-8" />                                
+            <div className="flex flex-col items-center text-center">
+                <img src="/star-char.png" alt="Maker Club 로고" className="size-48 mb-8" />                                
                 <div className="grid md:grid-cols-3 gap-8 mb-16">
                     <div className="bg-gray-800 p-6 rounded-xl transform transition hover:scale-105">
                         <div className="text-indigo-400 text-4xl mb-4">💭</div>

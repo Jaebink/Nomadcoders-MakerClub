@@ -1,15 +1,16 @@
 import type { Route } from "./+types/room-page";
 import { getLettersByReceiverId, getLoggedInUserId, getUserById } from "~/features/users/queries";
-import { makeSSRClient } from "~/supa-client";
+import { browserClient, makeSSRClient } from "~/supa-client";
 import PopoverForm from "~/common/components/ui/popover-form";
 import { Form } from "react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Switch } from "~/common/components/ui/switch";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "~/common/components/ui/hover-card";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { StarWithLetter } from "../components/star-with-letter";
 import { sendLetter, getRandomActiveReceiverIds } from "../queries";
 import { Button } from "~/common/components/ui/button";
+import type { Database } from "~/supa-client";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
     const { client } = makeSSRClient(request);
@@ -31,22 +32,25 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
     const title = formData.get('title') as string;
     const content = formData.get('content') as string;
 
-    const receiverIds = await getRandomActiveReceiverIds(client, 5);
+    const receiverIds = await getRandomActiveReceiverIds(client, 5, userId);
 
     if (receiverIds.length === 0) {
-        // 보낼 수신자가 없는 경우
         console.warn("No active receivers found to send random letter.");
         return { ok: false, message: "No active receivers available." };
     }
 
     await sendLetter(client, {
         senderId: userId,
-        receivers: receiverIds as string[],
+        receivers: receiverIds.map(receiver => ({
+            user_id: receiver.user_id,
+            is_active: true,
+            seen: false,
+            seen_at: null
+        })),
         title: title,
         content: content,
         channelId: null,
     });
-    console.log(`Letter sent to ${receiverIds.length} random active receiver(s).`);
 
     return { ok: true, message: "Letter sent successfully to random receivers." };
 };
@@ -61,13 +65,9 @@ export default function RoomPage({ loaderData }: Route.ComponentProps) {
     const [isReceiveOpen, setIsReceiveOpen] = useState(false);
 
     const [letters, setLetters] = useState(loaderData.letters);
-    
-    
 
     const handleSubmit = async (e: React.FormEvent) => {
         try {
-            // 여기에 실제 서버 API 호출 코드를 추가
-            // 예시: await fetch('/api/concerns', { method: 'POST', body: JSON.stringify({ concern }) })            
             setIsSending(true)
             setShowSuccess(true)
         } catch (error) {
@@ -77,29 +77,29 @@ export default function RoomPage({ loaderData }: Route.ComponentProps) {
         }
     }
 
-    /*
-     * 채널 연결 코드 *
     useEffect(() => {
-            const changes = browserClient
-                .channel(
-                    `room:${userId}-${loaderData.participants[0].profile.profile_id}`
-                )
-                .on(
-                    "postgres_changes",
-                    { event: "INSERT", schema: "public", table: "messages" },
-                    (payload) => {
-                    setMessages((prev) => [
-                        ...prev,
-                        payload.new as Database["public"]["Tables"]["messages"]["Row"],
-                    ]);
-                    }
-                )
-                .subscribe();
-            return () => {
-                changes.unsubscribe();
-            };
-        }, [userId, loaderData.participants[0].profile.profile_id]);
-     */
+        const changes = browserClient
+            .channel(
+                `channel:${loaderData.userId}`
+            )
+            .on(
+                "postgres_changes",
+                { event: "INSERT", schema: "public", table: "concern_letters" },
+                (payload) => {
+                    console.log("DEBUG: New letter received:", payload.new);
+                setLetters((prev) => [
+                    ...prev,
+                    payload.new as Database["public"]["Tables"]["concern_letters"]["Row"],
+                ]);
+                console.log("DEBUG: New letter received:", payload.new);
+                }
+            )
+            .subscribe();
+        return () => {
+            console.log("DEBUG: Unsubscribing from channel");
+            changes.unsubscribe();
+        };
+    }, []);
     
     return (
         <div className="flex flex-col items-center space-y-40">
@@ -118,6 +118,7 @@ export default function RoomPage({ loaderData }: Route.ComponentProps) {
                 </HoverCard>
                 <p className="text-lg mt-4">오늘은 무슨 고민이 있어서 오셨나요?</p>
             </div>
+
             <PopoverForm
                 open={open}
                 setOpen={(isOpen) => {
@@ -154,7 +155,8 @@ export default function RoomPage({ loaderData }: Route.ComponentProps) {
                 showSuccess={showSuccess}
                 successChild={<div className="p-4">편지가 성공적으로 제출되었습니다!</div>}
                 title="편지 작성하기"
-            />        
+            />
+
             <div className={`flex flex-col items-center fixed bottom-0 transition-transform duration-300 ease-in-out ${isReceiveOpen ? 'translate-y-0' : 'translate-y-[calc(100%-3.5rem)]'}`}>
                 <div className="flex items-center justify-center h-10 px-4 gap-4">
                     <button className="px-4 h-full bg-gray-600 hover:bg-gray-500 transition duration-200 rounded-t-md" onClick={() => setIsReceiveOpen((prev) => !prev)}>
@@ -167,10 +169,12 @@ export default function RoomPage({ loaderData }: Route.ComponentProps) {
                 </div>
                 <div className="flex flex-row items-center bg-gray-200 p-4 gap-40 h-60 w-300 rounded-t-lg">
                     {letters.map((letter) => (
-                        <StarWithLetter letter={letter} />
+                        <StarWithLetter key={letter.letter_id} letter={letter} />
                     ))}
                 </div>
             </div>
         </div>
     )
 }
+
+export const shouldRevalidate = () => false;
