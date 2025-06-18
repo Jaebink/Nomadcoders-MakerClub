@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router';
+import { Button } from '../components/ui/button';
 
 export default function HomePage() {
     const navigate = useNavigate();
@@ -29,12 +30,12 @@ export default function HomePage() {
                 <div className="space-y-6">
                     <h2 className="text-3xl font-bold text-white">여러분의 고민을 해결사들에게 맡겨보시겠어요?</h2>
                     <p className="text-gray-300 text-lg">고민 해결사들이 여러분의 고민을 기다리고 있어요!</p>
-                    <button
-                        className="cursor-pointer bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-4 px-8 rounded-full text-lg hover:opacity-90 transition duration-300 transform hover:scale-105"
+                    <Button
+                        className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold py-4 px-8 rounded-full text-lg hover:opacity-90 transition duration-300 transform hover:scale-105"
                         onClick={() => navigate('/auth/join')}
                     >
                         고민 해결사 등록하기
-                    </button>
+                    </Button>
                 </div>
             </div>
         </div>

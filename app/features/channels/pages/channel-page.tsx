@@ -57,8 +57,6 @@ export default function ChannelPage() {
                         showSuccess={showSuccess}
                         successChild={<div className="p-4">편지가 성공적으로 제출되었습니다!</div>}
                         title="채널 참여"
-                        width="1000px"
-                        height="400px"
                     />
                 </div>
             </div>            

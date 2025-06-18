@@ -121,16 +121,7 @@ export type Database = {
       }
     }
     Views: {
-      active_receivers: {
-        Row: {
-          created_at: string | null
-          letter_id: number | null
-          seen: boolean | null
-          seen_at: string | null
-          user_id: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_random_active_receivers: {

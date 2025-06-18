@@ -64,16 +64,17 @@ export default function App({ loaderData }: Route.ComponentProps) {
   const { pathname } = useLocation();
   const isLoggedIn = loaderData.user !== null;
   return (
-    <div className="min-h-screen bg-gray-900 relative p-6">
-      <StarsBackground />
-      <ShootingStars starColor="orange" starWidth={10} starHeight={2} />
+    <div className="min-h-screen bg-gray-900 relative py-16 px-6">
+      <div className="pointer-events-none">
+        <StarsBackground/>
+        <ShootingStars starColor="orange" starWidth={10} starHeight={2} />
+      </div>
       {(pathname === "/" || pathname.includes("/auth")) ? null : (
         <Navigation
           isLoggedIn={isLoggedIn}
-          className="z-10"
         />
       )}
-      <div className="flex flex-1 justify-center max-w-screen-xl mx-auto pt-16 z-10">
+      <div className="flex flex-1 justify-center max-w-screen-xl mx-auto">
         <Outlet context={{
           isLoggedIn,
           name: loaderData.profile?.name,
