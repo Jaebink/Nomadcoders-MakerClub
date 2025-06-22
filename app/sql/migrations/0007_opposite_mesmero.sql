@@ -1,0 +1,1 @@
+ALTER TABLE "concern_letters" ADD COLUMN "answer" text;

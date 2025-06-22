@@ -1,7 +1,7 @@
-import { bigint, boolean, jsonb, pgPolicy, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, jsonb, pgPolicy, pgTable, text, timestamp, uuid, primaryKey } from "drizzle-orm/pg-core";
 import { authenticatedRole, authUsers, authUid } from "drizzle-orm/supabase"
 import { channels } from "../channels/schema";
-import { sql } from "drizzle-orm"
+import { relations, sql } from "drizzle-orm"
 
 // const users = pgSchema("auth").table("users", {
 //     id: uuid().primaryKey()
@@ -74,3 +74,44 @@ export const concernLetters = pgTable("concern_letters", {
         withCheck: sql`${authUid} = ${table.sender_id}`,
     }),
 ]);
+
+export const userChannels = pgTable("user_channels", {
+    user_id: uuid().references(() => profiles.profile_id, {
+        onDelete: "cascade",
+    }).notNull(),
+    channel_id: bigint({ mode: "number" }).references(() => channels.channel_id, {
+        onDelete: "cascade",
+    }).notNull(),
+    joined_at: timestamp().notNull().defaultNow(),
+}, (table) => [
+    primaryKey({ columns: [table.user_id, table.channel_id] }),
+]);
+
+export const userChannelsRelations = relations(userChannels, ({ one }) => ({
+    user: one(profiles, {
+        fields: [userChannels.user_id],
+        references: [profiles.profile_id],
+    }),
+    channel: one(channels, {
+        fields: [userChannels.channel_id],
+        references: [channels.channel_id],
+    }),
+}));
+
+export const profilesRelations = relations(profiles, ({ many }) => ({
+    userChannels: many(userChannels),
+}));
+
+export const letter_responses = pgTable("letter_responses", {
+    response_id: bigint({ mode: "number" })
+        .primaryKey()
+        .generatedAlwaysAsIdentity(),
+    letter_id: bigint({ mode: "number" }).references(() => concernLetters.letter_id, {
+        onDelete: "cascade",
+    }).notNull(),
+    responder_id: uuid().references(() => profiles.profile_id, {
+        onDelete: "cascade",
+    }).notNull(),
+    response: text().notNull(),
+    responded_at: timestamp().notNull().defaultNow(),
+});

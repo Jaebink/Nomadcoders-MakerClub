@@ -13,7 +13,7 @@ export default function ChannelCard({ id, name, description, imageUrl, className
     return (
         <Link to={`/channels/${id}`} style={{ pointerEvents: disabled ? 'none' : 'auto'}}>
             <div className={className}>
-                <img src={imageUrl} alt="channel" className="w-full h-full object-cover rounded-t-lg" />
+                <img src={imageUrl} alt="channel" className="aspect-[3/2] object-cover rounded-t-lg bg-gray-500" />
                 <div className="bg-gray-600 rounded-b-lg p-4">
                     <h1 className="text-white md:text-lg text-sm">{name}</h1>
                     <p className="text-gray-400 text-xs">{description}</p>

@@ -53,3 +53,27 @@ export const getLettersByReceiverId = async (client: SupabaseClient<Database>, {
     }
     return data;
 };
+
+export const getLettersbySenderId = async (client: SupabaseClient<Database>, { userId }: { userId : string }) => {
+    const { data, error } = await client
+        .from("concern_letters")
+        .select("*")
+        .eq("sender_id", userId)
+        .order("created_at", { ascending: false });
+    if (error) {
+        throw error;
+    }
+    return data;
+};  
+
+export const getAnswers = async (client: SupabaseClient<Database>, { letterId }: { letterId : number }) => {
+    const { data, error } = await client
+        .from("letter_responses")
+        .select("*")
+        .eq("letter_id", letterId)
+        .order("responded_at", { ascending: false });
+    if (error) {
+        throw error;
+    }
+    return data;
+}; 

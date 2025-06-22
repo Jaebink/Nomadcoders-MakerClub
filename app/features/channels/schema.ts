@@ -1,7 +1,7 @@
 import { pgTable, bigint, text, timestamp, uuid, pgPolicy } from "drizzle-orm/pg-core";
-import { profiles } from "../users/schema";
+import { profiles, userChannels } from "../users/schema";
 import { authenticatedRole, authUid } from "drizzle-orm/supabase";
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 export const channels = pgTable("channels", {
     channel_id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
@@ -37,3 +37,7 @@ export const channels = pgTable("channels", {
         using: sql`${authUid} = ${table.owner_id}`,
     }),
 ]);
+
+export const channelsRelations = relations(channels, ({ many }) => ({
+    userChannels: many(userChannels),
+}));

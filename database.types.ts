@@ -92,6 +92,45 @@ export type Database = {
           },
         ]
       }
+      letter_responses: {
+        Row: {
+          letter_id: number
+          responded_at: string
+          responder_id: string
+          response: string
+          response_id: number
+        }
+        Insert: {
+          letter_id: number
+          responded_at?: string
+          responder_id: string
+          response: string
+          response_id?: never
+        }
+        Update: {
+          letter_id?: number
+          responded_at?: string
+          responder_id?: string
+          response?: string
+          response_id?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "letter_responses_letter_id_concern_letters_letter_id_fk"
+            columns: ["letter_id"]
+            isOneToOne: false
+            referencedRelation: "concern_letters"
+            referencedColumns: ["letter_id"]
+          },
+          {
+            foreignKeyName: "letter_responses_responder_id_profiles_profile_id_fk"
+            columns: ["responder_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -119,6 +158,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_channels: {
+        Row: {
+          channel_id: number
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          channel_id: number
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          channel_id?: number
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_channels_channel_id_channels_channel_id_fk"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["channel_id"]
+          },
+          {
+            foreignKeyName: "user_channels_user_id_profiles_profile_id_fk"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["profile_id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -131,7 +203,11 @@ export type Database = {
         }[]
       }
       get_random_active_users: {
-        Args: { num_limit?: number; sender_id?: string }
+        Args: {
+          num_limit?: number
+          sender_id?: string
+          target_channel_id?: number
+        }
         Returns: {
           id: string
           username: string

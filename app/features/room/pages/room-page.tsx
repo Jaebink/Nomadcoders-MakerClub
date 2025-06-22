@@ -2,13 +2,14 @@ import type { Route } from "./+types/room-page";
 import { getLettersByReceiverId, getLoggedInUserId, getUserById } from "~/features/users/queries";
 import { browserClient, makeSSRClient } from "~/supa-client";
 import PopoverForm from "~/common/components/ui/popover-form";
-import { Form, useFetcher, useRevalidator } from "react-router";
+import { Form, useFetcher, useRevalidator, useActionData, useSubmit } from "react-router";
 import { useEffect, useState } from "react";
 import { Switch } from "~/common/components/ui/switch";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "~/common/components/ui/hover-card";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { StarWithLetter } from "../components/star-with-letter";
-import { sendLetter, getRandomActiveReceiverIds } from "../queries";
+import { getRandomActiveReceiverIds } from "../queries";
+import { sendLetter, sendLetterAnswer } from "../mutations";
 import { Button } from "~/common/components/ui/button";
 import type { Database } from "~/supa-client";
 
@@ -24,38 +25,43 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
     };
 };
 
-export const action = async ({ request, params }: Route.ActionArgs) => {
+export const action = async ({ request }: Route.ActionArgs) => {    
     const { client } = await makeSSRClient(request);
     const userId = await getLoggedInUserId(client);
 
     const formData = await request.formData();
     const intent = formData.get('intent') as string;
 
-    if (intent === 'send-letter') {
-        const title = formData.get('title') as string;
-        const content = formData.get('content') as string;
-    
-        const receiverIds = await getRandomActiveReceiverIds(client, 5, userId);
-    
-        if (receiverIds.length === 0) {
-            console.warn("준비된 고민 해결사가 없습니다.");
-            return { ok: false, message: "준비된 고민 해결사가 없습니다.", intent: "send-letter" };
+    if (intent === 'send-letter') {        
+        try {
+            const title = formData.get('title') as string;
+            const content = formData.get('content') as string;
+        
+            const receiverIds = await getRandomActiveReceiverIds(client, 5, userId, null);
+        
+            if (receiverIds.length === 0) {
+                console.warn("준비된 고민 해결사가 없습니다.");
+                return { ok: false, message: "준비된 고민 해결사가 없습니다.", intent: "send-letter" };
+            }
+        
+            await sendLetter(client, {
+                senderId: userId,
+                receivers: receiverIds.map(receiver => ({
+                    user_id: receiver.user_id,
+                    is_active: true,
+                    seen: false,
+                    seen_at: null
+                })),
+                title: title,
+                content: content,
+                channelId: null,
+            });
+            return { ok: true, message: "편지 전달에 성공했습니다.", intent: "send-letter" };
+        } catch (sendError: any) {
+            // sendLetter나 getRandomActiveReceiverIds에서 발생한 에러를 여기서 캐치합니다.
+            console.error("ACTION: Error during send-letter process:", sendError); // ★ 추가/확인: 상세 에러 출력
+            return { ok: false, message: `편지 전달 중 오류 발생: ${sendError.message || sendError}`, intent: "send-letter" };
         }
-    
-        await sendLetter(client, {
-            senderId: userId,
-            receivers: receiverIds.map(receiver => ({
-                user_id: receiver.user_id,
-                is_active: true,
-                seen: false,
-                seen_at: null
-            })),
-            title: title,
-            content: content,
-            channelId: null,
-        });
-    
-        return { ok: true, message: "편지 전달에 성공했습니다.", intent: "send-letter" };
     } else if (intent === 'update-isActive') {
         const isActiveString = formData.get('is_active_status');
 
@@ -70,21 +76,46 @@ export const action = async ({ request, params }: Route.ActionArgs) => {
             .update({ is_active: newIsActive })
             .eq("profile_id", userId);
 
-        console.log("ACTION: Supabase Update Raw Result - data:", data, "error:", error, "count:", count);
-
         if (error) {
-            console.error("Supabase is_active 업데이트 에러:", error);
             return { ok: false, message: "프로필 활성화 상태 업데이트에 실패했습니다.", intent: "update-isActive" };
         }
 
         // count 속성을 사용하여 영향을 받은 행의 개수를 확인합니다.
         // count는 null이거나 숫자가 될 수 있습니다.
         if (count === 0) {
-            console.warn("ACTION: Supabase is_active 업데이트: 영향 받은 행 없음 (DB 변경 없음). userId:", userId, "newIsActive:", newIsActive, "count:", count);
             return { ok: false, message: "프로필 활성화 상태 업데이트에 실패했습니다. (영향 받은 행 없음)", intent: "update-isActive" };
         }
         
         return { ok: true, message: "프로필 활성화 상태가 성공적으로 업데이트되었습니다.", intent: "update-isActive" };
+    } else if (intent === 'answer-letter') {
+        console.log("답장하기 액션 진입");
+        const letterId = formData.get('letter_id') as unknown as number;
+        const answer = formData.get('answer') as string;
+        console.log(letterId);
+        console.log(answer);
+        if (!userId) { // 로그인한 사용자만 답변 가능
+            console.log("로그인 사용자만");
+            return { ok: false, message: "로그인이 필요합니다.", intent: "answer-letter" };
+        }
+        console.log("2");
+        // if (!letterId || !answer) {
+        //     return { ok: false, message: "편지 ID와 답변 내용이 필요합니다.", intent: "answer-letter" };
+        // }
+        console.log("3");
+        try {
+            console.log("답장하기 시도");
+            await sendLetterAnswer(client, {
+                letterId: letterId,
+                responderId: userId,
+                answer: answer,
+            });
+            console.log("답장하기 성공");
+        } catch (answerError: any) {
+            console.error("ACTION: Error during answer-letter process:", answerError);
+            return { ok: false, message: `편지 답변 중 오류 발생: ${answerError.message || answerError}`, intent: "answer-letter" };
+        }
+
+        return { ok: true, message: "편지 답변에 성공했습니다.", intent: "answer-letter" };
     }
 
     return { ok: false, message: "알 수 없는 요청입니다.", intent: "unknown" };
@@ -110,15 +141,13 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
             if (actionData.ok) {
                 setShowSuccess(true);
             } else {
-                setMessage(actionData.message || '고민 전달에 실패했습니다. 다시 시도해주세요.');
+                setShowSuccess(false);
             }
             setIsSending(false);
         }
         if (fetcher.state === 'idle' && fetcher.data?.intent === "update-isActive") {
             if (fetcher.data.ok) {
-                console.log("is_active 상태 업데이트 성공! loader 재유효화 요청 직전.");
                 revalidate();
-                console.log("is_active 상태 업데이트 성공! loader 재유효화 요청 완료.");
             } else {
                 console.error("is_active 상태 업데이트 실패:", fetcher.data.message);
                 setIsActive((prevIsActive) => !prevIsActive);
@@ -127,12 +156,11 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
     }, [actionData, fetcher.data, fetcher.state, setIsActive, revalidate, setIsSending, setMessage, setShowSuccess]);
 
     useEffect(() => {
-        console.log("DEBUG: loaderData.profile?.is_active 변경 감지:", loaderData.profile?.is_active);
         setIsActive(loaderData.profile?.is_active ?? false);
     }, [loaderData.profile?.is_active]);
 
     const handleSubmit = async (e: React.FormEvent) => {
-        setIsSending(true)
+        setIsSending(true)        
     }
 
     useEffect(() => {
@@ -144,17 +172,14 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
                 "postgres_changes",
                 { event: "INSERT", schema: "public", table: "concern_letters" },
                 (payload) => {
-                    console.log("DEBUG: New letter received:", payload.new);
-                setLetters((prev) => [
-                    ...prev,
-                    payload.new as Database["public"]["Tables"]["concern_letters"]["Row"],
-                ]);
-                console.log("DEBUG: New letter received:", payload.new);
+                    setLetters((prev) => [
+                        ...prev,
+                        payload.new as Database["public"]["Tables"]["concern_letters"]["Row"],
+                    ]);
                 }
             )
             .subscribe();
         return () => {
-            console.log("DEBUG: Unsubscribing from channel");
             changes.unsubscribe();
         };
     }, [loaderData.userId]);
@@ -174,10 +199,6 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
         <div className="flex flex-col items-center space-y-40">
             <div className="text-white space-y-4">
                 <h1 className="md:text-4xl text-2xl font-bold">{loaderData.profile?.name}님 안녕하세요</h1>
-                {/* 현재 isActive 상태 표시 (디버깅용) */}
-                <p className="text-xl">
-                    현재 활동 상태: <span className="font-bold">{isActive ? "활성" : "비활성"}</span>
-                </p>
                 <HoverCard>
                     <HoverCardTrigger className="cursor-pointer">
                         고민 편지 작성에 대해서
@@ -197,14 +218,13 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
                 setOpen={(isOpen) => {
                     setOpen(isOpen);
                     if (!isOpen) {
-                        // 팝오버가 닫힐 때 폼 리셋
                         setConcern('');
                         setMessage('');
                         setShowSuccess(false);
                     }
                 }}
                 openChild={
-                    <Form method="post" onSubmit={handleSubmit} className="space-y-4 p-4">
+                    <Form method="post" onSubmit={handleSubmit} className="space-y-4 p-4" action="/room">
                         <input type="text" name="title" placeholder="제목을 입력해주세요..." className="w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500" required />
                         <textarea
                             name="content"
@@ -222,7 +242,9 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
                         >
                             {isSending ? '전송 중...' : '편지 전달하기'}
                         </Button>
+                        <input type="hidden" name="intent" value="send-letter" />
                         <p className="text-center text-gray-600 mt-2">당신의 편지는 익명으로 랜덤한 해결사들에게 전달됩니다.</p>
+                        {message && <p className="text-center text-red-500 mt-2">{message}</p>}
                     </Form>
                 }
                 showSuccess={showSuccess}
