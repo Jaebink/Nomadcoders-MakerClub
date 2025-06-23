@@ -41,10 +41,10 @@ export default function Navigation({
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
-        <div className={cn("fixed left-0 top-0 h-full w-16 flex flex-col items-center p-0", className)}>
+        <div className={cn("fixed left-0 top-0 h-full w-16 flex flex-col p-0", className)}>
             <button
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="md:hidden fixed bottom-4 right-4 z-40 p-3 bg-gray-800 text-white rounded-full shadow-lg"
+                className="md:hidden cursor-pointer fixed top-4 right-4 z-40 p-3 bg-gray-800 text-white rounded-full shadow-lg"
                 >
                 <Menu size={24} />
             </button>
@@ -56,21 +56,23 @@ export default function Navigation({
                 )}
                 onClick={() => setIsMobileMenuOpen(false)}
             >
-                <div
-                    className="absolute right-0 top-0 h-full w-64 bg-gray-800 p-4 transform transition-transform duration-300"
+                <div // 👈 **이 div가 모바일 메뉴 패널입니다.**
+                    className="absolute right-0 top-0 h-full w-64 bg-gray-800 p-4 transform transition-transform duration-300 flex flex-col" // 💡 flex flex-col 추가
                     style={{
                     transform: isMobileMenuOpen ? "translateX(0)" : "translateX(100%)"
                     }}
                     onClick={(e) => e.stopPropagation()}
                 >
+                    {/* 상단: "메뉴" 텍스트와 닫기 버튼 */}
                     <div className="flex justify-between items-center mb-8">
-                        <div className="text-white text-xl font-bold">메뉴</div>
+                        <div className="text-white text-xl font-bold">메뉴</div> {/* 로고 역할 */}
                         <button onClick={() => setIsMobileMenuOpen(false)}>
                             <X className="text-white" size={24} />
                         </button>
                     </div>
                     
-                    <div className="space-y-6">
+                    {/* 중간: 네비게이션 아이템들 (남는 공간을 모두 차지) */}
+                    <div className="flex-1 space-y-6 flex flex-col justify-center"> {/* 💡 flex-1, flex flex-col justify-center 추가 */}
                     {navItems.map((item) => (
                         <Link
                         key={item.path}
@@ -85,6 +87,9 @@ export default function Navigation({
                         <span>{item.label}</span>
                         </Link>
                     ))}
+                    </div>
+
+                    {/* 하단: 프로필 링크 */}
                     <Link
                         to="/profile"
                         className={cn(
@@ -96,11 +101,10 @@ export default function Navigation({
                         <CircleUserRound className="mr-3" />
                         <span>프로필</span>
                     </Link>
-                    </div>
                 </div>
             </div>
 
-            <div className="hidden md:block">
+            <div className="hidden md:flex flex-col flex-1">
                 <div className="text-white mb-8">로고</div>
                 <div className="flex-1 w-full flex flex-col justify-center items-center">
                     <div className="relative flex flex-row w-full h-full items-center justify-center">
