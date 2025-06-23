@@ -266,7 +266,7 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
                         </div>
                     </fetcher.Form>
                 </div>
-                <div className="flex flex-row items-center bg-gray-200 p-4 gap-40 h-60 w-300 rounded-t-lg">
+                <div className="flex flex-row items-center bg-gray-200 p-4 gap-40 h-60 w-screen md:w-300 rounded-t-lg">
                     {letters.map((letter) => (
                         <StarWithLetter key={letter.letter_id} letter={letter} />
                     ))}
