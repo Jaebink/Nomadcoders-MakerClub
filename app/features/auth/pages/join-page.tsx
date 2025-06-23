@@ -3,8 +3,8 @@ import { makeSSRClient } from "~/supa-client";
 import { Form, Link, redirect } from "react-router";
 import { z } from "zod";
 import { useState } from "react";
-import { EyeIcon } from "lucide-react";
-import { EyeOffIcon } from "lucide-react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { AuthButtons } from "../conponentes/auth-buttons";
 
 const formSchema = z.object({
   email: z.string({
@@ -150,29 +150,7 @@ export default function JoinPage() {
             <span className="px-2 bg-white text-gray-500">또는</span>
           </div>
         </div>
-
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          <div>
-            <a
-              href="/auth/social/google/start"
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-            >
-              <span className="sr-only">Google로 회원가입</span>
-              <svg className="w-5 h-5" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
-              </svg>
-            </a>
-          </div>
-          <div>
-            <a
-              href="/auth/social/naver/start"
-              className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-green-500 text-white text-sm font-medium hover:bg-green-600"
-            >
-              <span className="sr-only">네이버로 회원가입</span>
-              <span className="text-sm">N</span>
-            </a>
-          </div>
-        </div>
+        <AuthButtons />
       </div>
       
       <div className="mt-6 text-center">
