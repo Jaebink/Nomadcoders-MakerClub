@@ -83,7 +83,6 @@ export default function Navigation({
                     ))}
                     </div>
 
-                    {/* 하단: 프로필 링크 */}
                     <Link
                         to="/profile"
                         className={cn(
@@ -102,11 +101,11 @@ export default function Navigation({
                 <div className="text-white mb-8">로고</div>
                 <div className="flex-1 w-full flex flex-col justify-center items-center">
                     <div className="flex flex-row w-full h-full items-center justify-center">
-                        {markPosition !== null && (
+                        {markPosition !== null && ( 
                             <div
                                 className="absolute left-0 w-1 h-12 bg-yellow-400 rounded-r transition-all duration-300 ease-in-out"
                                 style={{
-                                    top: markPosition,
+                                    top: markPosition, 
                                     opacity: 1,
                                     transition: 'top 0.3s ease-in-out, opacity 0.3s ease-in-out'
                                 }}
@@ -126,8 +125,14 @@ export default function Navigation({
                                     }}
                                     onMouseLeave={() => {
                                         setHoveredPath('');
-                                        const activeIndex = navItems.findIndex(i => isActive(i.path));
-                                        setMarkPosition(itemRefs.current[activeIndex]?.offsetTop ?? 0);
+                                        if (isActive('/profile')) {
+                                            // 현재 보고 있는 페이지가 프로필이라면, 마크를 숨김
+                                            setMarkPosition(null); 
+                                        } else {
+                                            // 현재 보고 있는 페이지가 프로필이 아니라면, 활성화된 아이템으로 마크 복귀
+                                            const activeIndex = navItems.findIndex(i => isActive(i.path));
+                                            setMarkPosition(itemRefs.current[activeIndex]?.offsetTop ?? null);
+                                        }
                                     }}
                                     style={{ position: "relative" }}
                                 >
@@ -139,7 +144,7 @@ export default function Navigation({
                                         <div className={`w-6 h-6 transition-colors ${isActive(item.path) ? 'text-yellow-400' : 'text-white hover:text-yellow-400'}`}>
                                             {item.icon}
                                         </div>
-                                        <span className={`absolute left-full ml-2 text-xs whitespace-nowrap text-white transition-all duration-200 ${
+                                        <span className={`absolute left-full pl-2 text-xs whitespace-nowrap text-white transition-all duration-200 ${
                                             isActive(item.path) || hoveredPath === item.path ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-2'
                                         }`}>
                                             {item.label}

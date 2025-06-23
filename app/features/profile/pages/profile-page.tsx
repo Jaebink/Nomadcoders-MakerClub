@@ -1,7 +1,17 @@
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "~/common/components/ui/hover-card";
 import type { Route } from "./+types/profile-page";
-import { getLoggedInUserId, getUserById, getLettersbySenderId, getAnswers } from "~/features/users/queries";
+import z from "zod";
 import { makeSSRClient } from "~/supa-client";
+import { getLoggedInUserId, getUserById, getLettersbySenderId, getAnswers } from "~/features/users/queries";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "~/common/components/ui/hover-card";
+import { updateUser } from "~/features/users/mutations";
+import { Form } from "react-router";
+import InputPair from "~/common/components/input-pair";
+import { LoadingButton } from "~/common/components/loading-button";
+
+const formSchema = z.object({
+    name: z.string().min(1),
+    username: z.string().min(1),
+});
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
     const { client } = makeSSRClient(request);
@@ -31,10 +41,48 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
     };
 };
 
+export const action = async ({ request }: Route.ActionArgs) => {
+    const { client } = makeSSRClient(request);
+    const userId = await getLoggedInUserId(client);
+    const formData = await request.formData();
+    const { success, data, error } = formSchema.safeParse(Object.fromEntries(formData));
+    if (!success) {
+        return {
+            ok: false,
+            formErrors: error.flatten().fieldErrors,
+        }
+    }
+    const { name, username } = data;
+    // 이미 존재하는 username인지 확인
+    const { data: existing } = await client
+        .from("profiles")
+        .select("profile_id")
+        .eq("username", username)
+        .neq("profile_id", userId)
+        .maybeSingle();
+
+    if (existing) {
+        return {
+            ok: false,
+            formErrors: { username: ["이미 존재하는 사용자 이름입니다."] },
+        }
+    }
+
+    await updateUser(client, { id: userId, name, username });
+    return { ok: true }
+};
+
 export default function ProfilePage({ loaderData }: Route.ComponentProps) {
     return (
-        <div className="flex flex-col items-center h-full text-white">
+        <div className="flex flex-col items-center h-full text-white gap-30">
             <h1 className="text-2xl font-bold">프로필</h1>
+            <div className="bg-white rounded-lg text-black p-4">
+                <Form method="post"  className="flex flex-col gap-4">
+                    <InputPair id="name" name="name" label="이름" defaultValue={loaderData.profile.name} />
+                    <InputPair id="name" name="username" label="사용자 이름" defaultValue={loaderData.profile.username} />
+                    <LoadingButton text="프로필 업데이트" />
+                </Form>
+            </div>
             <div className="flex flex-row items-center justify-start">
                 <div className="flex flex-col items-center space-y-4">
                     <h2 className="text-lg font-bold">내가 보낸 편지</h2>

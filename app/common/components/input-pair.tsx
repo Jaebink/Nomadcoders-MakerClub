@@ -9,7 +9,7 @@ export default function InputPair({ label, textArea = false, className, ...rest 
             <Label htmlFor={rest.id} className="flex flex-col items-start">
                 {label}
             </Label>
-            {textArea ? <Textarea rows={4} className="resize-none" {...rest} /> : <Input {...rest} />}
+            {textArea ? <Textarea rows={4} className="resize-none" {...rest} /> : <Input {...rest} className="border-black" />}
         </div>
     )
 }
