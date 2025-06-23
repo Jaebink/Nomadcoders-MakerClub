@@ -5,15 +5,22 @@ import { z } from "zod";
 import { useState } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { AuthButtons } from "../conponentes/auth-buttons";
+import { LoadingButton } from "~/common/components/loading-button";
+import InputPair from "~/common/components/input-pair";
 
 const formSchema = z.object({
   email: z.string({
-      required_error: "Email is required",
-      invalid_type_error: "Email should be a string",
+    required_error: "이메일을 입력해주세요",
+    invalid_type_error: "이메일은 문자열이어야 합니다",
   }).email("Invalid email address"),
   password: z.string({
-      required_error: "Password is required",
-  }).min(8, { message: "Password must be at least 8 characters long" }),
+    required_error: "비밀번호를 입력해주세요",
+  }).min(8, { message: "비밀번호는 8자 이상이어야 합니다" }),
+  confirmPassword: z.string({
+    required_error: "비밀번호를 확인해주세요",
+  }).min(8, { message: "비밀번호는 8자 이상이어야 합니다" }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "비밀번호가 일치하지 않습니다",
 });
 
 export const action = async ({ request }: Route.ActionArgs) => {
@@ -60,36 +67,45 @@ export const action = async ({ request }: Route.ActionArgs) => {
 
 export default function JoinPage() {
   const [showPassword, setShowPassword] = useState(false);
+
+  const [password, setPassword] = useState("");
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newPassword = e.target.value;
+    setPassword(newPassword); // 비밀번호 상태 업데이트
+
+    // 8자 이상일 때만 비밀번호 확인 필드를 보이도록 상태 업데이트
+    setShowConfirmPassword(newPassword.length >= 8);
+  };
+  
   return (
-    <div>
+    <div className="space-y-4">
       <h2 className="text-2xl font-bold text-gray-900 text-center">고민 해결사로 함께해요</h2>
       <p className="mt-2 text-sm text-gray-600 text-center">
         혼자 고민하지 마세요. 해결사들이 기다리고 있어요
       </p>
-      <Form className="mt-4 space-y-6" method="post">
-        <div className="rounded-md shadow-sm -space-y-px">
+      <Form method="post" className="space-y-4">
+        <div className="space-y-4">
+          <InputPair
+            id="email"
+            name="email"
+            type="email"
+            label="Email"
+            placeholder="이메일 주소를 입력해주세요"
+            required
+          />
           <div>
-            <label htmlFor="email" className="sr-only">이메일</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="이메일 주소"
-            />
-          </div>
-          <div className="relative">
-            <label htmlFor="password" className="sr-only">비밀번호</label>
-            <input
+            <InputPair
               id="password"
               name="password"
               type={showPassword ? "text" : "password"}
-              autoComplete="new-password"
+              label="Password"
+              placeholder="비밀번호를 입력해주세요 (8자 이상)"
+              className="relative"
               required
-              className="appearance-none rounded-none block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-              placeholder="비밀번호 (8자 이상)"
+              value={password}
+              onChange={handlePasswordChange}
             />
             <button
               type="button"
@@ -98,22 +114,18 @@ export default function JoinPage() {
             >
               {showPassword ? <EyeOffIcon className="w-5 h-5" /> : <EyeIcon className="w-5 h-5" />}
             </button>
-          </div>
-          <div>
-            <label htmlFor="confirm-password" className="sr-only">비밀번호 확인</label>
-            <input
+            <InputPair
               id="confirm-password"
               name="confirm-password"
               type="password"
-              autoComplete="new-password"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
               placeholder="비밀번호 확인"
+              className={`transition-all duration-500 ease-in-out ${showConfirmPassword ? "max-h-40 opacity-100" : "max-h-0 opacity-0 translate-y-[-10px]"}`}
+              required
             />
           </div>
         </div>
 
-        <div className="flex items-center">
+        {/* <div className="flex items-center">
           <input
             id="terms"
             name="terms"
@@ -129,16 +141,8 @@ export default function JoinPage() {
               개인정보 처리방침
             </Link>에 동의합니다.
           </label>
-        </div>
-
-        <div>
-          <button
-            type="submit"
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            회원가입
-          </button>
-        </div>
+        </div> */}
+        <LoadingButton text="회원가입" />
       </Form>
       
       <div className="mt-6">
@@ -147,7 +151,7 @@ export default function JoinPage() {
             <div className="w-full border-t border-gray-300" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">또는</span>
+            <span className="px-2 bg-white text-gray-500">Or Continue With</span>
           </div>
         </div>
         <AuthButtons />
@@ -155,7 +159,7 @@ export default function JoinPage() {
       
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
-          이미 해결사이신가요?
+          이미 고민 해결사이신가요?
           <Link to="/auth/login" className="font-medium text-indigo-600 hover:text-indigo-500 ml-2 ">
             로그인
           </Link>

@@ -42,17 +42,16 @@ export const action = async ({ request }: Route.ActionArgs) => {
 
 export default function LoginPage({ actionData }: Route.ComponentProps) {
   return (
-    <div>
+    <div className="space-y-4">
       <h2 className="text-2xl font-bold text-gray-900 text-center">로그인</h2>
       <Form className="w-full space-y-4" method="post">
         <InputPair
             id="email"
             label="Email"
-            description="Enter your email address"
             name="email"
             required
             type="email"
-            placeholder="i.e wemake@example.com"
+            placeholder="이메일 주소를 입력해주세요"
         />
         {actionData && "formError" in actionData && (
             <p className="text-sm text-red-500">{actionData.formError?.email?.join(", ")}</p>
@@ -60,22 +59,21 @@ export default function LoginPage({ actionData }: Route.ComponentProps) {
         <InputPair
             id="password"
             label="Password"
-            description="Enter your password"
             name="password"
             required
             type="password"
-            placeholder="Enter your password"
+            placeholder="비밀번호를 입력해주세요"
         />
         {actionData && "formError" in actionData && (
             <p className="text-sm text-red-500">{actionData.formError?.password?.join(", ")}</p>
         )}                    
-        <LoadingButton text="Login" />
+        <LoadingButton text="로그인" />
         {actionData && "loginError" in actionData && (
             <p className="text-sm text-red-500">{actionData.loginError}</p>
         )}                    
     </Form>
 
-      <div className="flex items-center justify-between">
+      {/* <div className="flex items-center justify-between">
         <div className="flex items-center">
           <input
             id="remember-me"
@@ -93,14 +91,14 @@ export default function LoginPage({ actionData }: Route.ComponentProps) {
             비밀번호를 잊으셨나요?
           </Link>
         </div>
-      </div>      
+      </div> */}
       <div className="mt-6">
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
             <div className="w-full border-t border-gray-300" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">또는</span>
+            <span className="px-2 bg-white text-gray-500">Or Continue With</span>
           </div>
         </div>
         <AuthButtons />
@@ -108,7 +106,7 @@ export default function LoginPage({ actionData }: Route.ComponentProps) {
       
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-600">
-          아직 회원이 아니신가요?{' '}
+          아직 가입 전이라면?{' '}
           <Link to="/auth/join" className="font-medium text-indigo-600 hover:text-indigo-500">
             회원가입
           </Link>

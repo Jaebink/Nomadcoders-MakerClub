@@ -1,16 +1,13 @@
-import type { InputHTMLAttributes, TextareaHTMLAttributes } from "react"
+import type { InputHTMLAttributes } from "react"
 import { Input } from "./ui/input"
-import { Label } from "./ui/label"
 import { Textarea } from "./ui/textarea"
+import { Label } from "./ui/label"
 
-export default function InputPair({ label, description, textArea = false, ...rest }: { label: string, description: string, textArea?: boolean } & (InputHTMLAttributes<HTMLInputElement| HTMLTextAreaElement>)) {
+export default function InputPair({ label, textArea = false, className, ...rest }: { label?: string, textArea?: boolean, className?: string } & (InputHTMLAttributes<HTMLInputElement| HTMLTextAreaElement>)) {
     return (
-        <div className="space-y-2 flex flex-col">
-            <Label htmlFor={rest.id} className="flex flex-col">
+        <div className={`space-y-2 flex flex-col ${className}`}>
+            <Label htmlFor={rest.id} className="flex flex-col items-start">
                 {label}
-                <small className="text-muted-foreground">
-                    {description}
-                </small>
             </Label>
             {textArea ? <Textarea rows={4} className="resize-none" {...rest} /> : <Input {...rest} />}
         </div>

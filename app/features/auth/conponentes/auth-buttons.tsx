@@ -5,13 +5,13 @@ import { Button } from "~/common/components/ui/button";
 export function AuthButtons() {
     return (
         <div className="mt-6 grid grid-cols-2 gap-3">
-            <Button variant="outline" className="w-full" asChild>
+            <Button variant="outline" className="w-full hover:bg-[#FEE500]" asChild>
                 <Link to="/auth/social/kakao/start">
                     <MessageCircleIcon className="w-4 h-4" />
                     Kakao Talk
                 </Link>
             </Button>
-            <Button variant="outline" className="w-full" asChild>
+            <Button variant="outline" className="w-full hover:bg-gray-600 hover:text-white" asChild>
                 <Link to="/auth/social/github/start">
                     <GithubIcon className="w-4 h-4" />
                     Github
