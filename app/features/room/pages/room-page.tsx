@@ -3,7 +3,7 @@ import { getLettersByReceiverId, getLoggedInUserId, getUserById } from "~/featur
 import { browserClient, makeSSRClient } from "~/supa-client";
 import PopoverForm from "~/common/components/ui/popover-form";
 import { Form, useFetcher, useRevalidator, useActionData, useSubmit } from "react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Switch } from "~/common/components/ui/switch";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "~/common/components/ui/hover-card";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -195,6 +195,34 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
         );
     };
     
+    const getStartOffsetPosition = () => {
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+
+        const rand = Math.random();
+        let offsetX: number;
+        let offsetY: number;
+
+        // 별이 원래 위치에서 얼마나 떨어져서 시작할지 계산
+        // 예를 들어, 화면 너비의 1.5배만큼 떨어져서 시작
+        const distance = 1.5; 
+
+        if (rand < 0.25) { // 왼쪽에서 출발 (원래 위치에서 왼쪽으로)
+            offsetX = -viewportWidth * distance; 
+            offsetY = (Math.random() - 0.5) * viewportHeight; // 화면 세로축 중앙 기준 위아래 랜덤
+        } else if (rand < 0.5) { // 오른쪽에서 출발 (원래 위치에서 오른쪽으로)
+            offsetX = viewportWidth * distance;
+            offsetY = (Math.random() - 0.5) * viewportHeight;
+        } else if (rand < 0.75) { // 위쪽에서 출발 (원래 위치에서 위쪽으로)
+            offsetX = (Math.random() - 0.5) * viewportWidth;
+            offsetY = -viewportHeight * distance;
+        } else { // 아래쪽에서 출발 (원래 위치에서 아래쪽으로)
+            offsetX = (Math.random() - 0.5) * viewportWidth;
+            offsetY = viewportHeight * distance; 
+        }
+        return { x: offsetX, y: offsetY };
+    };
+    
     return (
         <div className="flex flex-col items-center space-y-40">
             <div className="text-white space-y-4">
@@ -267,9 +295,18 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
                     </fetcher.Form>
                 </div>
                 <div className="flex flex-row items-center bg-gray-200 p-4 gap-40 h-60 w-screen md:w-300 rounded-t-lg">
-                    {letters.map((letter) => (
-                        <StarWithLetter key={letter.letter_id} letter={letter} />
-                    ))}
+                {letters.map((letter, index) => {
+                    const offset = getStartOffsetPosition(); // 시작 오프셋 계산
+                    return (
+                        <StarWithLetter
+                            letter={letter}
+                            startFromX={offset.x} // 프롭스로 시작 오프셋 전달
+                            startFromY={offset.y} // 프롭스로 시작 오프셋 전달
+                            delay={index * 0.15} 
+                        />
+                    );
+                })}
+
                 </div>
             </div>
         </div>

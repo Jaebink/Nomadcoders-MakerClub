@@ -4,6 +4,7 @@ import { Form, Link, redirect } from "react-router";
 import LoadingButton from "~/common/components/loading-button";
 import { z } from "zod";
 import { makeSSRClient } from "~/supa-client";
+import { getLoggedInUserId } from "~/features/users/queries";
 import { AuthButtons } from "../conponentes/auth-buttons";
 
 const formSchema = z.object({
@@ -37,6 +38,12 @@ export const action = async ({ request }: Route.ActionArgs) => {
         formError: null,
       };
     }
+  const userId = await getLoggedInUserId(client);
+  await client.from("profiles").update({
+    is_active: true,
+    last_active_at: new Date().toISOString(),
+  }).eq("profile_id", userId);
+  
   return redirect("/room", { headers });
 };
 
