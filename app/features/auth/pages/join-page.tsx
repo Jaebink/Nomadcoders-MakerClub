@@ -5,7 +5,7 @@ import { z } from "zod";
 import { useState } from "react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { AuthButtons } from "../conponentes/auth-buttons";
-import { LoadingButton } from "~/common/components/loading-button";
+import LoadingButton from "~/common/components/loading-button";
 import InputPair from "~/common/components/input-pair";
 
 const formSchema = z.object({
