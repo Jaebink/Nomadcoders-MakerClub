@@ -18,6 +18,7 @@ export const updateUser = async (
         .update({
             name,
             username,
+            updated_at: new Date().toISOString(),
         })
         .eq("profile_id", id);
     if (error) {

@@ -7,7 +7,7 @@ interface LoadingButtonProps {
     text: string;
 }
 
-export function LoadingButton({ className, text }: LoadingButtonProps) {
+export default function LoadingButton({ className, text }: LoadingButtonProps) {
     const navigation = useNavigation();
     const isSubmitting = navigation.state === "submitting" || navigation.state === "loading";
     return (

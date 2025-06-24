@@ -4,9 +4,11 @@ import { makeSSRClient } from "~/supa-client";
 import { getLoggedInUserId, getUserById, getLettersbySenderId, getAnswers } from "~/features/users/queries";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "~/common/components/ui/hover-card";
 import { updateUser } from "~/features/users/mutations";
-import { Form } from "react-router";
+import { Form, Link } from "react-router";
 import InputPair from "~/common/components/input-pair";
-import { LoadingButton } from "~/common/components/loading-button";
+import LoadingButton from "~/common/components/loading-button";
+import { LogOutIcon } from "lucide-react";
+import { Button } from "~/common/components/ui/button";
 
 const formSchema = z.object({
     name: z.string().min(1),
@@ -76,12 +78,18 @@ export default function ProfilePage({ loaderData }: Route.ComponentProps) {
     return (
         <div className="flex flex-col items-center h-full text-white gap-30">
             <h1 className="text-2xl font-bold">프로필</h1>
-            <div className="bg-white rounded-lg text-black p-4">
+            <div className="bg-white rounded-lg text-black p-4 space-y-4">
                 <Form method="post"  className="flex flex-col gap-4">
                     <InputPair id="name" name="name" label="이름" defaultValue={loaderData.profile.name} />
                     <InputPair id="name" name="username" label="사용자 이름" defaultValue={loaderData.profile.username} />
                     <LoadingButton text="프로필 업데이트" />
                 </Form>
+                <Button variant="destructive" asChild className="w-full">
+                    <Link to="/auth/logout">
+                        <LogOutIcon className="size-4 mr-2" />
+                        Logout
+                    </Link>
+                </Button>
             </div>
             <div className="flex flex-row items-center justify-start">
                 <div className="flex flex-col items-center space-y-4">

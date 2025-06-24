@@ -14,6 +14,7 @@ export const profiles = pgTable("profiles", {
     is_active: boolean().notNull().default(false),
     created_at: timestamp().notNull().defaultNow(),
     updated_at: timestamp().notNull().defaultNow(),
+    last_active_at: timestamp().notNull().defaultNow(),
 }, (table) => [
     pgPolicy("profile-select-policy", {
         for: "select",

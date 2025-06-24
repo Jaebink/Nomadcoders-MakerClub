@@ -12,37 +12,41 @@ BEGIN
 
         IF new.raw_app_meta_data ? 'provider' AND (new.raw_app_meta_data ->> 'provider' = 'email' OR new.raw_app_meta_data ->> 'provider' = 'phone') THEN
             IF new.raw_user_meta_data ? 'name' AND new.raw_user_meta_data ? 'username' THEN
-                INSERT INTO public.profiles (profile_id, name, username)
+                INSERT INTO public.profiles (profile_id, name, username, is_active)
                 VALUES (
                     new.id,
                     new.raw_user_meta_data ->> 'name',
-                    new.raw_user_meta_data ->> 'username'
+                    new.raw_user_meta_data ->> 'username',
+                    true
                 );
             ELSE
-                INSERT INTO public.profiles (profile_id, name, username)
+                INSERT INTO public.profiles (profile_id, name, username, is_active)
                 VALUES (
                     new.id,
                     'Anonymous',
-                    'mr.' || substr(md5(random()::text), 1, 8)
+                    'mr.' || substr(md5(random()::text), 1, 8),
+                    true
                 );
             END IF;
         END IF;
 
         IF new.raw_app_meta_data ? 'provider' AND new.raw_app_meta_data ->> 'provider' = 'github' THEN
-            INSERT INTO public.profiles (profile_id, name, username)
+            INSERT INTO public.profiles (profile_id, name, username, is_active)
             VALUES (
                 new.id,
                 new.raw_user_meta_data ->> 'full_name',
-                new.raw_user_meta_data ->> 'user_name'
+                new.raw_user_meta_data ->> 'user_name',
+                true
             );
         END IF;
 
         IF new.raw_app_meta_data ? 'provider' AND new.raw_app_meta_data ->> 'provider' = 'kakao' THEN
-            INSERT INTO public.profiles (profile_id, name, username)
+            INSERT INTO public.profiles (profile_id, name, username, is_active)
             VALUES (
                 new.id,
                 new.raw_user_meta_data ->> 'name',
-                new.raw_user_meta_data ->> 'preferred_username'
+                new.raw_user_meta_data ->> 'preferred_username',
+                true
             );
         END IF;
 

@@ -13,7 +13,7 @@ import "./app.css";
 import Navigation from "./common/components/ui/navigation";
 import { makeSSRClient } from "./supa-client";
 import { getUserById } from "./features/users/queries";
-
+import UserActivityTracker from "./common/components/UserActivityTracker";
 import { StarsBackground } from "./common/components/ui/stars-backgroun";
 import { ShootingStars } from "./common/components/ui/shooting-stars";
 
@@ -75,6 +75,7 @@ export default function App({ loaderData }: Route.ComponentProps) {
         />
       )}
       <div className="flex flex-1 justify-center max-w-screen-xl mx-auto">
+        <UserActivityTracker />
         <Outlet context={{
           isLoggedIn,
           name: loaderData.profile?.name,

@@ -1,7 +1,7 @@
 import type { Route } from "./+types/login-page";
 import InputPair from "~/common/components/input-pair";
 import { Form, Link, redirect } from "react-router";
-import { LoadingButton } from "~/common/components/loading-button";
+import LoadingButton from "~/common/components/loading-button";
 import { z } from "zod";
 import { makeSSRClient } from "~/supa-client";
 import { AuthButtons } from "../conponentes/auth-buttons";
