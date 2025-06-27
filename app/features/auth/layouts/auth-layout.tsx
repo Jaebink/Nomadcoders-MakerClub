@@ -6,7 +6,7 @@ import { cn } from "~/lib/utils";
 
 export default function AuthLayout() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="flex flex-col items-center justify-center h-[calc(100vh-128px)]">
       <Button variant="outline" asChild className="absolute top-8 right-8 group">
         <Link to="/" className="flex items-center justify-center">
           <span className={cn(
@@ -23,8 +23,11 @@ export default function AuthLayout() {
           )} />
         </Link>
       </Button>
-      <div className="bg-white rounded-lg py-8 px-10 space-y-4">
-        <Outlet />
+      <div className="relative">
+        <img src="/see-star.png" alt="로그인을 기다리는 별" className="absolute size-50 mx-auto left-1/2 transform -translate-x-1/2 -translate-y-[87%]" />
+        <div className="bg-white rounded-lg py-8 px-10 space-y-4">
+          <Outlet />
+        </div>
       </div>
     </div>
   );
