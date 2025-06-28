@@ -34,7 +34,7 @@ export function PopoverForm({
         layoutId={`${title}-wrapper`}
         onClick={() => setOpen(true)}
         style={{ borderRadius: 8 }}
-        className="flex h-9 items-center border bg-white dark:bg-[#121212] px-3 text-sm font-medium outline-none"
+        className="flex h-9 items-center border bg-white dark:bg-[#121212] px-3 text-sm font-medium outline-none cursor-pointer"
       >
         <motion.span layoutId={`${title}-title`}>{title}</motion.span>
       </motion.button>

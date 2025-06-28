@@ -3,21 +3,23 @@ import { makeSSRClient } from "~/supa-client";
 import { Form, Link, redirect } from "react-router";
 import { z } from "zod";
 import { useState } from "react";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { AuthButtons } from "../conponentes/auth-buttons";
 import LoadingButton from "~/common/components/loading-button";
 import InputPair from "~/common/components/input-pair";
+import { Alert, AlertDescription } from "~/common/components/ui/alert";
+import { AlertTitle } from "~/common/components/ui/alert";
+import { AlertCircleIcon } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string({
     required_error: "이메일을 입력해주세요",
     invalid_type_error: "이메일은 문자열이어야 합니다",
-  }).email("Invalid email address"),
+  }).email("이메일 형식이 올바르지 않습니다"),
   password: z.string({
     required_error: "비밀번호를 입력해주세요",
   }).min(8, { message: "비밀번호는 8자 이상이어야 합니다" }),
   confirmPassword: z.string({
-    required_error: "비밀번호를 확인해주세요",
+    required_error: "비밀번호가 일치하지 않습니다",
   }).min(8, { message: "비밀번호는 8자 이상이어야 합니다" }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "비밀번호가 일치하지 않습니다",
@@ -28,7 +30,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   const { success, data, error } = formSchema.safeParse(Object.fromEntries(formData));
   if (!success) {
       return {
-          formError: error.flatten().fieldErrors,
+          formErrors: error.flatten().fieldErrors,
       };
   }
   // const usernameExists = await checkUsernameExists(request, { username: data.username });
@@ -54,9 +56,8 @@ export const action = async ({ request }: Route.ActionArgs) => {
       console.error('SignUp Error:', {
           message: signUpError.message,
           name: signUpError.name,
-          // status: signUpError.status,
-          // details: signUpError.details,
-          data: data  // 실제 전송된 데이터 확인
+          status: signUpError.status,
+          data: data,
       });
       return {
           signUpError: `${signUpError.message} (${signUpError.name})`,
@@ -65,9 +66,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
   return redirect("/room", { headers });
 };
 
-export default function JoinPage() {
-  const [showPassword, setShowPassword] = useState(false);
-
+export default function JoinPage({ actionData }: Route.ComponentProps) {
   const [password, setPassword] = useState("");
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -95,33 +94,49 @@ export default function JoinPage() {
             placeholder="이메일 주소를 입력해주세요"
             required
           />
+          {actionData?.formErrors && "email" in actionData?.formErrors ? (
+            <Alert variant="destructive">
+              <AlertCircleIcon />
+              <AlertDescription>
+                {actionData.formErrors?.email}
+              </AlertDescription>
+            </Alert>
+          ) : null}
           <div>
             <InputPair
               id="password"
               name="password"
-              type={showPassword ? "text" : "password"}
               label="Password"
               placeholder="비밀번호를 입력해주세요 (8자 이상)"
               className="relative"
               required
               value={password}
               onChange={handlePasswordChange}
+              isPassword={true}
             />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700"
-            >
-              {showPassword ? <EyeOffIcon className="size-5" /> : <EyeIcon className="size-5" />}
-            </button>
             <InputPair
               id="confirm-password"
               name="confirm-password"
               type="password"
               placeholder="비밀번호 확인"
               className={`transition-all duration-500 ease-in-out ${showConfirmPassword ? "max-h-40 opacity-100" : "max-h-0 opacity-0 translate-y-[-10px]"}`}
-              required
             />
+            {actionData?.formErrors && "password" in actionData?.formErrors ? (
+              <Alert variant="destructive">
+                <AlertCircleIcon />
+                <AlertDescription>
+                  {actionData.formErrors?.password}
+                </AlertDescription>
+              </Alert>
+            ) : null}
+            {showConfirmPassword && actionData?.formErrors && "confirmPassword" in actionData?.formErrors ? (
+              <Alert variant="destructive">
+                <AlertCircleIcon />
+                <AlertDescription>
+                  {actionData.formErrors?.confirmPassword}
+                </AlertDescription>
+              </Alert>
+            ) : null}
           </div>
         </div>
 
@@ -143,6 +158,15 @@ export default function JoinPage() {
           </label>
         </div> */}
         <LoadingButton text="회원가입" />
+        {actionData?.signUpError ? (
+          <Alert variant="destructive">
+            <AlertCircleIcon />
+            <AlertTitle>회원가입 실패</AlertTitle>
+            <AlertDescription>
+              {actionData.signUpError}
+            </AlertDescription>
+          </Alert>
+        ) : null}
       </Form>
       
       <div className="mt-6">

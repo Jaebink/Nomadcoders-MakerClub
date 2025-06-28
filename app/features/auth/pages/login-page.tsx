@@ -6,24 +6,27 @@ import { z } from "zod";
 import { makeSSRClient } from "~/supa-client";
 import { getLoggedInUserId } from "~/features/users/queries";
 import { AuthButtons } from "../conponentes/auth-buttons";
+import { Alert, AlertDescription, AlertTitle } from "~/common/components/ui/alert";
+import { AlertCircleIcon } from "lucide-react";
 
 const formSchema = z.object({
   email: z.string({
-      required_error: "Email is required",
-      invalid_type_error: "Email should be a string",
-  }).email("Invalid email address"),
+      required_error: "이메일을 입력해주세요",
+      invalid_type_error: "이메일은 문자열이어야 합니다",
+  }).email("이메일 형식이 올바르지 않습니다"),
   password: z.string({
-      required_error: "Password is required",
-  }).min(8, { message: "Password must be at least 8 characters long" }),
+      required_error: "비밀번호를 입력해주세요",
+  }).min(8, { message: "비밀번호는 8자 이상이어야 합니다" }),
 });
 
 export const action = async ({ request }: Route.ActionArgs) => {
   const formData = await request.formData();
   const { success, data, error } = formSchema.safeParse(Object.fromEntries(formData));
   if (!success) {
+    console.log("석세스 에러", error.flatten().fieldErrors);
     return {
       loginError: null,
-      formError: error.flatten().fieldErrors,
+      formErrors: error.flatten().fieldErrors,
     };
   }
   const { email, password } = data;
@@ -35,7 +38,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
     if (loginError) {
       return {
         loginError: loginError.message,
-        formError: null,
+        formErrors: null,
       };
     }
   const userId = await getLoggedInUserId(client);
@@ -60,9 +63,14 @@ export default function LoginPage({ actionData }: Route.ComponentProps) {
             type="email"
             placeholder="이메일 주소를 입력해주세요"
         />
-        {actionData && "formError" in actionData && (
-            <p className="text-sm text-red-500">{actionData.formError?.email?.join(", ")}</p>
-        )}
+        {actionData?.formErrors && "email" in actionData?.formErrors ? (
+            <Alert variant="destructive">
+              <AlertCircleIcon />
+              <AlertDescription>
+                {actionData.formErrors?.email}
+              </AlertDescription>
+            </Alert>
+        ) : null}
         <InputPair
             id="password"
             label="Password"
@@ -71,13 +79,24 @@ export default function LoginPage({ actionData }: Route.ComponentProps) {
             type="password"
             placeholder="비밀번호를 입력해주세요"
         />
-        {actionData && "formError" in actionData && (
-            <p className="text-sm text-red-500">{actionData.formError?.password?.join(", ")}</p>
-        )}                    
+        {actionData?.formErrors && "password" in actionData?.formErrors ? (
+            <Alert variant="destructive">
+              <AlertCircleIcon />
+              <AlertDescription>
+                {actionData.formErrors?.password}
+              </AlertDescription>
+            </Alert>
+        ) : null}                    
         <LoadingButton text="로그인" />
-        {actionData && "loginError" in actionData && (
-            <p className="text-sm text-red-500">{actionData.loginError}</p>
-        )}                    
+        {actionData?.loginError ? (
+            <Alert variant="destructive">
+              <AlertCircleIcon />
+              <AlertTitle>{actionData.loginError}</AlertTitle>
+              <AlertDescription className="text-xs">
+                입력하신 정보를 다시 확인해주세요
+              </AlertDescription>
+            </Alert>
+        ) : null}                    
     </Form>
 
       {/* <div className="flex items-center justify-between">
