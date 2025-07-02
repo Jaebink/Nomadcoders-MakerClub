@@ -24,7 +24,7 @@ export default function ChannelsPage({ loaderData }: Route.ComponentProps) {
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {loaderData.channels.map((channel: any) => (
-                    <ChannelCard id={channel.channel_id} name={channel.name} description={channel.description} imageUrl={channel.image} />
+                    <ChannelCard key={channel.channel_id} id={channel.channel_id} name={channel.name} description={channel.description} imageUrl={channel.image} />
                 ))}
             </div>
         </div>

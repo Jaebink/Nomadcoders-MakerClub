@@ -30,6 +30,7 @@
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.43.1",
     "framer-motion": "^12.12.2",
+    "gsap": "^3.13.0",
     "isbot": "^5.1.27",
     "lucide-react": "^0.511.0",
     "motion": "^12.18.1",

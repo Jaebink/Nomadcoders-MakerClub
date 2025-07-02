@@ -3,7 +3,7 @@ import { getLettersByReceiverId, getLoggedInUserId, getUserById } from "~/featur
 import { browserClient, makeSSRClient } from "~/supa-client";
 import PopoverForm from "~/common/components/ui/popover-form";
 import { Form, useFetcher, useRevalidator, useActionData, useSubmit } from "react-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Switch } from "~/common/components/ui/switch";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "~/common/components/ui/hover-card";
 import { ChevronDown, ChevronUp } from "lucide-react";
@@ -132,6 +132,27 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
 
     const [letters, setLetters] = useState(loaderData.letters);
 
+    // 편지 애니메이션 상태 관리
+    const STAR_ANIMATE_STATUS_KEY = 'star_animate_status';
+    const [starAnimateStatus, setStarAnimateStatus] = useState<{ [key: string]: boolean }>(() => {
+        if (typeof window !== 'undefined') {
+            const starAnimateStatus = localStorage.getItem(STAR_ANIMATE_STATUS_KEY);
+            return starAnimateStatus ? JSON.parse(starAnimateStatus) : {};
+        }
+        return {};
+    });
+
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem(STAR_ANIMATE_STATUS_KEY, JSON.stringify(starAnimateStatus));
+        }
+    }, [starAnimateStatus]);
+
+    const handleStarAnimateComplete = useCallback((letterId: number) => {
+        setStarAnimateStatus((prev) => ({ ...prev, [letterId]: true }));
+    }, []);
+
+    // 고민 해결사 상태 관리
     const [isActive, setIsActive] = useState<boolean>(loaderData.profile?.is_active ?? false);
     const fetcher = useFetcher();
     const { revalidate } = useRevalidator();
@@ -159,10 +180,12 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
         setIsActive(loaderData.profile?.is_active ?? false);
     }, [loaderData.profile?.is_active]);
 
+    // 편지 전송
     const handleSubmit = async (e: React.FormEvent) => {
         setIsSending(true)        
     }
 
+    // 구독으로 편지 수신 시 편지 목록 업데이트
     useEffect(() => {
         const changes = browserClient
             .channel(
@@ -184,6 +207,7 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
         };
     }, [loaderData.userId]);
 
+    // 고민 해결사 상태 변경
     const handleSwitchChange = (checked: boolean) => {
         setIsActive(checked);
         fetcher.submit(
@@ -194,35 +218,7 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
             { method: "post", action: "/room" }
         );
     };
-    
-    const getStartOffsetPosition = () => {
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
 
-        const rand = Math.random();
-        let offsetX: number;
-        let offsetY: number;
-
-        // 별이 원래 위치에서 얼마나 떨어져서 시작할지 계산
-        // 예를 들어, 화면 너비의 1.5배만큼 떨어져서 시작
-        const distance = 1.5; 
-
-        if (rand < 0.25) { // 왼쪽에서 출발 (원래 위치에서 왼쪽으로)
-            offsetX = -viewportWidth * distance; 
-            offsetY = (Math.random() - 0.5) * viewportHeight; // 화면 세로축 중앙 기준 위아래 랜덤
-        } else if (rand < 0.5) { // 오른쪽에서 출발 (원래 위치에서 오른쪽으로)
-            offsetX = viewportWidth * distance;
-            offsetY = (Math.random() - 0.5) * viewportHeight;
-        } else if (rand < 0.75) { // 위쪽에서 출발 (원래 위치에서 위쪽으로)
-            offsetX = (Math.random() - 0.5) * viewportWidth;
-            offsetY = -viewportHeight * distance;
-        } else { // 아래쪽에서 출발 (원래 위치에서 아래쪽으로)
-            offsetX = (Math.random() - 0.5) * viewportWidth;
-            offsetY = viewportHeight * distance; 
-        }
-        return { x: offsetX, y: offsetY };
-    };
-    
     return (
         <div className="flex flex-col items-center space-y-40">
             <div className="text-white space-y-4">
@@ -279,7 +275,7 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
                 successChild={<div className="p-4">편지가 성공적으로 제출되었습니다!</div>}
                 title="편지 작성하기"
             />
-
+    
             <div className={`flex flex-col items-center fixed bottom-0 transition-transform duration-300 ease-in-out ${isReceiveOpen ? 'translate-y-0' : 'translate-y-[calc(100%-3.5rem)]'}`}>
                 <div className="flex items-center justify-center h-10 px-4 gap-4">
                     <button className="px-4 h-full bg-gray-600 hover:bg-gray-500 transition duration-200 rounded-t-md" onClick={() => setIsReceiveOpen((prev) => !prev)}>
@@ -294,19 +290,15 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
                         </div>
                     </fetcher.Form>
                 </div>
-                <div className="flex flex-row items-center bg-gray-200 p-4 gap-40 h-60 w-screen md:w-300 rounded-t-lg">
-                {letters.map((letter, index) => {
-                    const offset = getStartOffsetPosition(); // 시작 오프셋 계산
-                    return (
+                <div className="flex flex-row items-center bg-gray-200 p-4 h-60 w-screen md:w-300 rounded-t-lg">
+                    {letters.map((letter, index) => (
                         <StarWithLetter
+                            key={index}
                             letter={letter}
-                            startFromX={offset.x} // 프롭스로 시작 오프셋 전달
-                            startFromY={offset.y} // 프롭스로 시작 오프셋 전달
-                            delay={index * 0.15} 
+                            isAnimated={starAnimateStatus[letter.letter_id] || false}
+                            onAnimateComplete={() => handleStarAnimateComplete(letter.letter_id)}
                         />
-                    );
-                })}
-
+                    ))}
                 </div>
             </div>
         </div>

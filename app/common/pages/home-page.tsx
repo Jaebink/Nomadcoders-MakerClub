@@ -1,11 +1,19 @@
-import { useNavigate } from 'react-router';
-import { Button } from '../components/ui/button';
+import type { Route } from './+types/home-page';
+import { redirect } from 'react-router';
 import LoadingButton from '../components/loading-button';
+import { getLoggedInUserId } from '~/features/users/queries';
+import { makeSSRClient } from '~/supa-client';
+
+export const loader = async ({ request }: Route.LoaderArgs) => {
+    const { client } = makeSSRClient(request);
+    const userId = await getLoggedInUserId(client);
+    if (userId) {
+        return redirect('/room');
+    }
+    return null;
+};
 
 export default function HomePage() {
-    const navigate = useNavigate();
-    
-
     return (
         <div>
             <div className="flex flex-col items-center text-center">
