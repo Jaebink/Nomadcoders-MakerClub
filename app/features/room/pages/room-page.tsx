@@ -6,12 +6,13 @@ import { Form, useFetcher, useRevalidator, useActionData, useSubmit } from "reac
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Switch } from "~/common/components/ui/switch";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "~/common/components/ui/hover-card";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { AlertCircleIcon, ChevronDown, ChevronUp } from "lucide-react";
 import { StarWithLetter } from "../components/star-with-letter";
 import { getRandomActiveReceiverIds } from "../queries";
 import { sendLetter, sendLetterAnswer } from "../mutations";
 import { Button } from "~/common/components/ui/button";
 import type { Database } from "~/supa-client";
+import { Alert, AlertDescription, AlertTitle } from "~/common/components/ui/alert";
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
     const { client } = makeSSRClient(request);
@@ -28,22 +29,28 @@ export const loader = async ({ request }: Route.LoaderArgs) => {
 export const action = async ({ request }: Route.ActionArgs) => {    
     const { client } = await makeSSRClient(request);
     const userId = await getLoggedInUserId(client);
-
+    
     const formData = await request.formData();
     const intent = formData.get('intent') as string;
-
+    
     if (intent === 'send-letter') {        
         try {
             const title = formData.get('title') as string;
             const content = formData.get('content') as string;
-        
+            
             const receiverIds = await getRandomActiveReceiverIds(client, 5, userId, null);
-        
+            
             if (receiverIds.length === 0) {
-                console.warn("준비된 고민 해결사가 없습니다.");
-                return { ok: false, message: "준비된 고민 해결사가 없습니다.", intent: "send-letter" };
+                console.warn("준비된 고민 해결사가 없습니다");
+                return {
+                    ok: false, 
+                    actionErrors: {
+                        receivers: "준비된 고민 해결사가 없습니다", 
+                    },
+                    intent: "send-letter",
+                };
             }
-        
+            
             await sendLetter(client, {
                 senderId: userId,
                 receivers: receiverIds.map(receiver => ({
@@ -56,37 +63,68 @@ export const action = async ({ request }: Route.ActionArgs) => {
                 content: content,
                 channelId: null,
             });
-            return { ok: true, message: "편지 전달에 성공했습니다.", intent: "send-letter" };
+            return {
+                ok: true,
+                actionErrors: null,
+                intent: "send-letter"
+            };
         } catch (sendError: any) {
             // sendLetter나 getRandomActiveReceiverIds에서 발생한 에러를 여기서 캐치합니다.
             console.error("ACTION: Error during send-letter process:", sendError); // ★ 추가/확인: 상세 에러 출력
-            return { ok: false, message: `편지 전달 중 오류 발생: ${sendError.message || sendError}`, intent: "send-letter" };
+            return { 
+                ok: false, 
+                actionErrors: {
+                    sending: `편지 전달 중 오류 발생: ${sendError.message || sendError}`
+                }, 
+                intent: "send-letter",
+            };
         }
     } else if (intent === 'update-isActive') {
         const isActiveString = formData.get('is_active_status');
-
+        
         if (isActiveString === null) {
-            return { ok: false, message: "is_active_status 값이 전달되지 않았습니다.", intent: "update-isActive" };
+            return { 
+                ok: false, 
+                actionErrors: {
+                    active: "is_active_status 값이 전달되지 않았습니다"
+                }, 
+                intent: "update-isActive",
+            };
         }
-
+        
         const newIsActive = isActiveString === "on";
-
+        
         const { data, error, count } = await client
             .from("profiles")
             .update({ is_active: newIsActive })
             .eq("profile_id", userId);
-
+        
         if (error) {
-            return { ok: false, message: "프로필 활성화 상태 업데이트에 실패했습니다.", intent: "update-isActive" };
+            return { 
+                ok: false, 
+                actionErrors: {
+                    updateActive: "프로필 활성화 상태 업데이트에 실패했습니다"
+                }, 
+                intent: "update-isActive",
+            };
         }
-
         // count 속성을 사용하여 영향을 받은 행의 개수를 확인합니다.
         // count는 null이거나 숫자가 될 수 있습니다.
         if (count === 0) {
-            return { ok: false, message: "프로필 활성화 상태 업데이트에 실패했습니다. (영향 받은 행 없음)", intent: "update-isActive" };
+            return { 
+                ok: false, 
+                actionErrors: {
+                    updateActive: "프로필 활성화 상태 업데이트에 실패했습니다 (영향 받은 행 없음)"
+                }, 
+                intent: "update-isActive",
+            };
         }
         
-        return { ok: true, message: "프로필 활성화 상태가 성공적으로 업데이트되었습니다.", intent: "update-isActive" };
+        return { 
+            ok: true, 
+            actionErrors: null,
+            intent: "update-isActive"
+        };
     } else if (intent === 'answer-letter') {
         console.log("답장하기 액션 진입");
         const letterId = formData.get('letter_id') as unknown as number;
@@ -95,7 +133,13 @@ export const action = async ({ request }: Route.ActionArgs) => {
         console.log(answer);
         if (!userId) { // 로그인한 사용자만 답변 가능
             console.log("로그인 사용자만");
-            return { ok: false, message: "로그인이 필요합니다.", intent: "answer-letter" };
+            return { 
+                ok: false, 
+                actionErrors: {
+                    login: "로그인이 필요합니다"
+                }, 
+                intent: "answer-letter",
+            };
         }
         console.log("2");
         // if (!letterId || !answer) {
@@ -112,13 +156,29 @@ export const action = async ({ request }: Route.ActionArgs) => {
             console.log("답장하기 성공");
         } catch (answerError: any) {
             console.error("ACTION: Error during answer-letter process:", answerError);
-            return { ok: false, message: `편지 답변 중 오류 발생: ${answerError.message || answerError}`, intent: "answer-letter" };
+            return { 
+                ok: false, 
+                actionErrors: {
+                    sendingAnswer: `편지 답변 중 오류 발생: ${answerError.message || answerError}`
+                }, 
+                intent: "answer-letter",
+            };
         }
-
-        return { ok: true, message: "편지 답변에 성공했습니다.", intent: "answer-letter" };
+        
+        return { 
+            ok: true, 
+            actionErrors: null, 
+            intent: "answer-letter" 
+        };
     }
-
-    return { ok: false, message: "알 수 없는 요청입니다.", intent: "unknown" };
+    
+    return { 
+        ok: false, 
+        actionErrors: {
+            request: "알 수 없는 요청입니다"
+        },
+        intent: "unknown"
+    };
 };
 
 export default function RoomPage({ loaderData, actionData }: Route.ComponentProps) {
@@ -268,7 +328,12 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
                         </Button>
                         <input type="hidden" name="intent" value="send-letter" />
                         <p className="text-center text-gray-600 mt-2">당신의 편지는 익명으로 랜덤한 해결사들에게 전달됩니다.</p>
-                        {message && <p className="text-center text-red-500 mt-2">{message}</p>}
+                        {actionData?.actionErrors && "receivers" in actionData?.actionErrors ? (
+                            <Alert variant="destructive">
+                                <AlertCircleIcon />
+                                <AlertDescription>{actionData.actionErrors.receivers}</AlertDescription>
+                            </Alert>
+                        ) : null}
                     </Form>
                 }
                 showSuccess={showSuccess}
