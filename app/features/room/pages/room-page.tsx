@@ -2,8 +2,8 @@ import type { Route } from "./+types/room-page";
 import { getLettersByReceiverId, getLoggedInUserId, getUserById } from "~/features/users/queries";
 import { browserClient, makeSSRClient } from "~/supa-client";
 import PopoverForm from "~/common/components/ui/popover-form";
-import { Form, useFetcher, useRevalidator, useActionData, useSubmit } from "react-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Form, useFetcher, useRevalidator } from "react-router";
+import { useCallback, useEffect, useState } from "react";
 import { Switch } from "~/common/components/ui/switch";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "~/common/components/ui/hover-card";
 import { AlertCircleIcon, ChevronDown, ChevronUp } from "lucide-react";
@@ -12,7 +12,12 @@ import { getRandomActiveReceiverIds } from "../queries";
 import { sendLetter, sendLetterAnswer } from "../mutations";
 import { Button } from "~/common/components/ui/button";
 import type { Database } from "~/supa-client";
-import { Alert, AlertDescription, AlertTitle } from "~/common/components/ui/alert";
+import { Alert, AlertDescription } from "~/common/components/ui/alert";
+import { z } from "zod";
+
+const formSchema = z.object({
+    answer: z.string().min(1).max(10),
+});
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
     const { client } = makeSSRClient(request);
@@ -126,12 +131,9 @@ export const action = async ({ request }: Route.ActionArgs) => {
             intent: "update-isActive"
         };
     } else if (intent === 'answer-letter') {
-        console.log("답장하기 액션 진입");
         const letterId = formData.get('letter_id') as unknown as number;
-        const answer = formData.get('answer') as string;
-        console.log(letterId);
-        console.log(answer);
-        if (!userId) { // 로그인한 사용자만 답변 가능
+        const {success, data, error} = formSchema.safeParse(Object.fromEntries(formData));
+        if (!userId) {
             console.log("로그인 사용자만");
             return { 
                 ok: false, 
@@ -141,25 +143,28 @@ export const action = async ({ request }: Route.ActionArgs) => {
                 intent: "answer-letter",
             };
         }
-        console.log("2");
-        // if (!letterId || !answer) {
-        //     return { ok: false, message: "편지 ID와 답변 내용이 필요합니다.", intent: "answer-letter" };
-        // }
-        console.log("3");
+        if (!success) {
+            return {
+                ok: false,
+                actionErrors: {
+                    answer: `답변 내용이 올바르지 않습니다\n(Error: ${error.flatten().fieldErrors.answer})`
+                },
+                intent: "answer-letter",
+            };
+        }
         try {
-            console.log("답장하기 시도");
+            // throw new Error("test");
             await sendLetterAnswer(client, {
                 letterId: letterId,
                 responderId: userId,
-                answer: answer,
+                content: data.answer,
             });
-            console.log("답장하기 성공");
-        } catch (answerError: any) {
-            console.error("ACTION: Error during answer-letter process:", answerError);
+        } catch (sendingAnswerError: any) {
+            console.error("ACTION: 편지 전송 에러:", sendingAnswerError);
             return { 
                 ok: false, 
                 actionErrors: {
-                    sendingAnswer: `편지 답변 중 오류 발생: ${answerError.message || answerError}`
+                    sendingAnswer: `편지 답변 중 오류 발생: ${sendingAnswerError.message || sendingAnswerError}`
                 }, 
                 intent: "answer-letter",
             };
@@ -328,6 +333,7 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
                         </Button>
                         <input type="hidden" name="intent" value="send-letter" />
                         <p className="text-center text-gray-600 mt-2">당신의 편지는 익명으로 랜덤한 해결사들에게 전달됩니다.</p>
+                        <p className="text-center text-blue-600 mt-2">유저가 없을 경우 편지가 전달되지 않지만 현재 항상 활성화인 테스트 유저를 만들어 놨습니다.</p>
                         {actionData?.actionErrors && "receivers" in actionData?.actionErrors ? (
                             <Alert variant="destructive">
                                 <AlertCircleIcon />
@@ -362,6 +368,10 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
                             letter={letter}
                             isAnimated={starAnimateStatus[letter.letter_id] || false}
                             onAnimateComplete={() => handleStarAnimateComplete(letter.letter_id)}
+                            errorMessage={actionData?.actionErrors ? {
+                                answer: actionData.actionErrors.answer,
+                                sendingAnswer: actionData.actionErrors.sendingAnswer,
+                            } : undefined}
                         />
                     ))}
                 </div>

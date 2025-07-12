@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useLayoutEffect } from 'react';
+import React, { useRef, useState, useLayoutEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
@@ -10,83 +10,80 @@ interface AnimatedModalProps {
   title: string;
   children: React.ReactNode;
   letterId: number;
+  errorMessage: {
+    answer?: string;
+    sendingAnswer?: string;
+  } | undefined;
 }
 
-export const AnimatedModal: React.FC<AnimatedModalProps> = ({
-  trigger,
-  title,
-  children,
-  letterId,
-}) => {
+export const AnimatedModal: React.FC<AnimatedModalProps> = ({ trigger, title, children, letterId, errorMessage }) => {
   const [modalOpen, setModalOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
-
-  const [answerOpen, setAnswerOpen] = useState(false);
-
-  const writeAnswerButtonRef = useRef<HTMLDivElement>(null); 
   
-  const [modalContentHeight, setModalContentHeight] = useState(0); 
-  const formContainerRef = useRef<HTMLDivElement>(null); 
-  const childrenContainerRef = useRef<HTMLDivElement>(null); 
-  const headerRef = useRef<HTMLDivElement>(null); 
-
-
+  const [answerOpen, setAnswerOpen] = useState(false);
+  
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const childrenContainerRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const writeAnswerButtonRef = useRef<HTMLDivElement>(null);
+  
+  const [modalContentHeight, setModalContentHeight] = useState<number | 'auto'>(0);
+  
+  const textareaVariants = {
+    hidden: { opacity: 0, height: 0 },
+    visible: { opacity: 1, height: 'auto', maxHeight: '100px', transition: { maxHeight: { duration: 0.5 } } }
+  };
+  
   const handleModalOpenChange = (isModalOpen: boolean) => {
     if (isModalOpen && triggerRef.current) {
       setTriggerRect(triggerRef.current.getBoundingClientRect());
     }
     setModalOpen(isModalOpen);
   };
-
+  
   useLayoutEffect(() => {
+    let observer: ResizeObserver | null = null;
+    
     if (modalOpen) {
       const measureHeights = () => {
-        let calculatedHeight = 0;
-
-        if (headerRef.current) {
-            calculatedHeight += headerRef.current.offsetHeight;
-        }
-
-        if (childrenContainerRef.current) {
-            calculatedHeight += childrenContainerRef.current.scrollHeight;
+        let currentTotalHeight = 0;
+        
+        if (modalRef.current) {
+          currentTotalHeight = modalRef.current.scrollHeight;
         }
         
-        if (writeAnswerButtonRef.current && !answerOpen) { 
-            calculatedHeight += writeAnswerButtonRef.current.offsetHeight;
+        if (answerOpen && modalRef.current) {
+          currentTotalHeight = modalRef.current.scrollHeight;
+          currentTotalHeight += 24;
         }
         
-        if (answerOpen && formContainerRef.current) {
-          calculatedHeight += formContainerRef.current.scrollHeight; 
-          calculatedHeight += 16; 
-        }
-        
-        calculatedHeight += 48; 
-
-        setModalContentHeight(Math.max(calculatedHeight, 200)); 
+        setModalContentHeight(currentTotalHeight);
       };
-
-      measureHeights(); 
+      
+      observer = new ResizeObserver(measureHeights);
+      
+      if (textareaRef.current) {
+        observer.observe(textareaRef.current);
+      }
+      
+      if (answerOpen) {
+        measureHeights();
     } else {
-      setModalContentHeight(0);
-      setAnswerOpen(false);
+        measureHeights();
     }
+      
+    } else {
+      setModalContentHeight('auto');
+    }
+
+    return () => {
+      if (observer) {
+        observer.disconnect();
+      }
+    };
   }, [modalOpen, answerOpen]);
-
-  const buttonVariants = {
-    initial: { opacity: 1, pointerEvents: 'auto' },
-    hidden: { opacity: 0, pointerEvents: 'none', transition: { duration: 0.3 } }
-  };
-
-  const formContentVariants = {
-    hidden: { height: 0, opacity: 0, transition: { duration: 0.4 } },
-    visible: {
-      height: 'auto',
-      opacity: 1,
-      transition: { duration: 0.6, delay: 0.1 }
-    },
-  };
-
+  
   return (
     <Dialog.Root open={modalOpen} onOpenChange={handleModalOpenChange}>
       <Dialog.Trigger asChild>
@@ -98,7 +95,7 @@ export const AnimatedModal: React.FC<AnimatedModalProps> = ({
           {trigger}
         </button>
       </Dialog.Trigger>
-
+      
       <Dialog.Portal forceMount>
         <AnimatePresence>
           {modalOpen && ( 
@@ -113,27 +110,27 @@ export const AnimatedModal: React.FC<AnimatedModalProps> = ({
             </Dialog.Overlay>
           )}
         </AnimatePresence>
-
+        
         <AnimatePresence>
           {modalOpen && triggerRect && ( 
             <Dialog.Content asChild>
               <div
                 className="fixed inset-0 z-50 flex items-center justify-center"
                 onClick={(e) => {
-                  e.stopPropagation(); 
-                  setModalOpen(false); 
+                  e.stopPropagation();
+                  setModalOpen(false);
+                  setAnswerOpen(false);
                 }}
               >
                 <motion.div
                   key="modalContent" 
-                  className="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto p-6 relative modal-content-box flex flex-col overflow-hidden" 
+                  className="bg-white rounded-lg shadow-xl w-full max-w-md mx-auto p-6 relative flex flex-col gap-4"
                   initial={{
                     opacity: 0,
                     scale: 0.5,
                     x: triggerRect.left + triggerRect.width / 2 - window.innerWidth / 2,
                     y: triggerRect.top + triggerRect.height / 2 - window.innerHeight / 2,
-                    rotateX: 15,
-                    height: modalContentHeight > 0 ? modalContentHeight : 200, // 초기 높이를 미리 설정
+                    height: modalContentHeight,
                   }}
                   animate={{
                     opacity: 1,
@@ -141,25 +138,26 @@ export const AnimatedModal: React.FC<AnimatedModalProps> = ({
                     x: 0,
                     y: 0,
                     rotateX: 0,
-                    height: modalContentHeight > 0 ? modalContentHeight : 'auto', 
+                    height: modalContentHeight,
                   }}
                   exit={{
                     opacity: 0,
                     scale: 0.5,
                     x: triggerRect.left + triggerRect.width / 2 - window.innerWidth / 2,
                     y: triggerRect.top + triggerRect.height / 2 - window.innerHeight / 2,
-                    rotateX: -15,
+                    height: modalContentHeight,
                   }}
                   transition={{
                     type: 'spring',
                     damping: 25,
                     stiffness: 300,
-                    duration: 0.25, 
-                    height: { duration: 0.6 } 
+                    duration: 1,
+                    height: { duration: 0.2, type: 'spring', damping: 15, stiffness: 1100 }
                   }}
-                  onClick={(e) => e.stopPropagation()} 
+                  onClick={(e) => e.stopPropagation()}
+                  ref={modalRef}
                 >
-                  <div ref={headerRef} className="flex justify-between items-center mb-4">
+                  <div className="flex justify-between items-center">
                     <Dialog.Title className="text-lg font-medium text-gray-900">
                       {title}
                     </Dialog.Title>
@@ -177,44 +175,58 @@ export const AnimatedModal: React.FC<AnimatedModalProps> = ({
                     </Dialog.Close>
                   </div>
                   
-                  <div ref={childrenContainerRef} className="flex flex-col mb-4">
+                  <div ref={childrenContainerRef} className="flex flex-col">
                     {children}
                   </div>
-
+                  
                   <div className="w-full flex-grow flex flex-col relative justify-end">
                     <motion.div
                       key="answerForm" 
-                      ref={formContainerRef}
-                      initial="hidden"
-                      animate="visible"
-                      exit="hidden" 
-                      variants={formContentVariants}
-                      className="w-full flex flex-col gap-2 overflow-y-auto" 
-                      style={{ maxHeight: '100%' }} 
                     >
-                      <Form method="post" action="/room" className='flex flex-col gap-2'>
+                      <Form method="post" action="/room" className='flex flex-col'>
                         <input type="hidden" name="letter_id" value={letterId} />
                         <input type="hidden" name="intent" value="answer-letter" />
-                        <textarea
+                        <motion.textarea
                           name="answer"
                           placeholder="이 고민에 대한 당신의 답변을 작성해주세요..."
-                          className='border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 min-h-[100px] resize-none w-full'
-                          required
+                          className='border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none w-full p-2 overflow-hidden'
+                          variants={textareaVariants}
+                          initial="hidden"
+                          animate={answerOpen ? "visible" : "hidden"}
+                          minLength={1}
+                          maxLength={1000}
+                          rows={4}
+                          ref={textareaRef}
                         />
+                        {errorMessage && (
+                          <motion.div
+                            className="text-red-500 text-xs"
+                            style={{ whiteSpace: 'pre-line' }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                          >
+                            {errorMessage.answer}
+                          </motion.div>
+                        )}
+                        {errorMessage && (
+                          <motion.div
+                            className="text-red-500 text-xs"
+                            style={{ whiteSpace: 'pre-line' }}
+                          >
+                            {errorMessage.sendingAnswer}
+                          </motion.div>
+                        )}
                         <motion.div
+                          className="w-full" 
                           ref={writeAnswerButtonRef}
-                          className="w-full absolute bottom-0 left-0" 
-                          initial="initial"
-                          animate={answerOpen ? "hidden" : "initial"} 
-                          variants={buttonVariants}
                         >
                           <Button
                             type={answerOpen ? "submit" : "button"} 
-                            onClick={() => {
+                            onClick={(e) => {
                               if (!answerOpen) {
-                                console.log("답변 작성하기 버튼 클릭");
+                                e.preventDefault();
                                 setAnswerOpen(true);
-                                console.log("답변 작성하기 버튼 클릭 후 답변 작성 폼 보여질거임");
                               }
                             }}
                             className='w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition duration-200 mt-2'

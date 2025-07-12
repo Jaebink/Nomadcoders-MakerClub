@@ -24,13 +24,13 @@ export const sendLetter = async (client: SupabaseClient<Database>, { senderId, r
     return data?.letter_id;
 };
 
-export const sendLetterAnswer = async (client: SupabaseClient<Database>, { letterId, responderId, answer }: { letterId: number, responderId: string, answer: string }) => {
+export const sendLetterAnswer = async (client: SupabaseClient<Database>, { letterId, responderId, content }: { letterId: number, responderId: string, content: string }) => {
     const { data, error: updateError } = await client
         .from('letter_responses')
         .insert({
             letter_id: letterId,
             responder_id: responderId,
-            response: answer,
+            response: content,
         })
         .select('letter_id')
         .single();

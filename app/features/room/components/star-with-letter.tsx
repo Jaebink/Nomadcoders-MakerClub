@@ -7,6 +7,10 @@ interface StarWithLetterProps {
     letter: Database["public"]["Tables"]["concern_letters"]["Row"];
     isAnimated: boolean;
     onAnimateComplete: () => void;
+    errorMessage: {
+        answer?: string;
+        sendingAnswer?: string;
+    } | undefined;
 }
 
 // 별이 화면 밖에서 시작할 위치를 계산하는 함수
@@ -35,10 +39,10 @@ const getStartOffsetPosition = () => {
     return { x: offsetX, y: offsetY };
 };
 
-export const StarWithLetter = ({ letter, isAnimated, onAnimateComplete }: StarWithLetterProps) => {
+export const StarWithLetter = ({ letter, isAnimated, onAnimateComplete, errorMessage }: StarWithLetterProps) => {
     const starRef = useRef<HTMLDivElement>(null);
     const tweenRef = useRef<gsap.core.Tween | null>(null);
-
+    
     useEffect(() => {
         // 애니메이션 트리거 신호가 오고, 별과 목표 요소의 ref가 연결되었으며, 클라이언트 환경일 때
         if (starRef.current && typeof window !== 'undefined') {
@@ -49,7 +53,7 @@ export const StarWithLetter = ({ letter, isAnimated, onAnimateComplete }: StarWi
             }
             const timeout = setTimeout(() => {
                 const { x: startX, y: startY } = getStartOffsetPosition();
-            
+                
                 tweenRef.current = gsap.from(
                     starElement,
                     {
@@ -74,9 +78,9 @@ export const StarWithLetter = ({ letter, isAnimated, onAnimateComplete }: StarWi
                 }
             };
         }
-
+        
     }, [letter.letter_id, isAnimated]);
-
+    
     return (
         <div key={letter.letter_id} ref={starRef} className="relative">
             <img src="/fly-star.png" alt="편지를 들고 있는 별" className="h-50" />
@@ -86,6 +90,7 @@ export const StarWithLetter = ({ letter, isAnimated, onAnimateComplete }: StarWi
                     trigger="편지 열기"
                     title={letter.title}
                     children={<div>{letter.content}</div>}
+                    errorMessage={errorMessage}
                 />                
             </div>
         </div>
