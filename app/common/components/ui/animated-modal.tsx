@@ -1,9 +1,10 @@
 import React, { useRef, useState, useLayoutEffect } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { motion, AnimatePresence } from 'motion/react';
-import { X } from 'lucide-react';
+import { AlertCircleIcon, X } from 'lucide-react';
 import { Button } from './button';
 import { Form } from 'react-router';
+import { Alert, AlertDescription } from './alert';
 
 interface AnimatedModalProps {
   trigger: React.ReactNode;
@@ -29,6 +30,8 @@ export const AnimatedModal: React.FC<AnimatedModalProps> = ({ trigger, title, ch
   const writeAnswerButtonRef = useRef<HTMLDivElement>(null);
   
   const [modalContentHeight, setModalContentHeight] = useState<number | 'auto'>(0);
+
+  const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
   
   const textareaVariants = {
     hidden: { opacity: 0, height: 0 },
@@ -82,7 +85,7 @@ export const AnimatedModal: React.FC<AnimatedModalProps> = ({ trigger, title, ch
         observer.disconnect();
       }
     };
-  }, [modalOpen, answerOpen]);
+  }, [modalOpen, answerOpen, errorMessage]);
   
   return (
     <Dialog.Root open={modalOpen} onOpenChange={handleModalOpenChange}>
@@ -157,86 +160,97 @@ export const AnimatedModal: React.FC<AnimatedModalProps> = ({ trigger, title, ch
                   onClick={(e) => e.stopPropagation()}
                   ref={modalRef}
                 >
-                  <div className="flex justify-between items-center">
-                    <Dialog.Title className="text-lg font-medium text-gray-900">
-                      {title}
-                    </Dialog.Title>
-                    <Dialog.Description className="sr-only">
-                      당신에게 온 편지, {title}에 대한 내용입니다.
-                    </Dialog.Description>
-                    <Dialog.Close asChild>
-                      <button
-                        type="button"
-                        className="rounded-full p-1 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        aria-label="Close"
-                      >
-                        <X size={18} />
-                      </button>
-                    </Dialog.Close>
-                  </div>
-                  
-                  <div ref={childrenContainerRef} className="flex flex-col">
-                    {children}
-                  </div>
-                  
-                  <div className="w-full flex-grow flex flex-col relative justify-end">
-                    <motion.div
-                      key="answerForm" 
-                    >
-                      <Form method="post" action="/room" className='flex flex-col'>
-                        <input type="hidden" name="letter_id" value={letterId} />
-                        <input type="hidden" name="intent" value="answer-letter" />
-                        <motion.textarea
-                          name="answer"
-                          placeholder="이 고민에 대한 당신의 답변을 작성해주세요..."
-                          className='border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none w-full p-2 overflow-hidden'
-                          variants={textareaVariants}
-                          initial="hidden"
-                          animate={answerOpen ? "visible" : "hidden"}
-                          minLength={1}
-                          maxLength={1000}
-                          rows={4}
-                          ref={textareaRef}
-                        />
-                        {errorMessage && (
-                          <motion.div
-                            className="text-red-500 text-xs"
-                            style={{ whiteSpace: 'pre-line' }}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
+                  {isAnswerSubmitted ? (
+                    <div className="flex justify-center items-center">
+                      <h1 className="text-lg font-medium text-gray-900">답변이 제출되었습니다.</h1>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-between items-center">
+                        <Dialog.Title className="text-lg font-medium text-gray-900">
+                          {title}
+                        </Dialog.Title>
+                        <Dialog.Description className="sr-only">
+                          당신에게 온 편지, {title}에 대한 내용입니다.
+                        </Dialog.Description>
+                        <Dialog.Close asChild>
+                          <button
+                            type="button"
+                            className="rounded-full p-1 inline-flex items-center justify-center text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            aria-label="Close"
                           >
-                            {errorMessage.answer}
-                          </motion.div>
-                        )}
-                        {errorMessage && (
-                          <motion.div
-                            className="text-red-500 text-xs"
-                            style={{ whiteSpace: 'pre-line' }}
-                          >
-                            {errorMessage.sendingAnswer}
-                          </motion.div>
-                        )}
+                            <X size={18} />
+                          </button>
+                        </Dialog.Close>
+                      </div>
+                      
+                      <div ref={childrenContainerRef} className="flex flex-col">
+                        {children}
+                      </div>
+                      
+                      <div className="w-full flex-grow flex flex-col relative justify-end">
                         <motion.div
-                          className="w-full" 
-                          ref={writeAnswerButtonRef}
+                          key="answerForm" 
                         >
-                          <Button
-                            type={answerOpen ? "submit" : "button"} 
-                            onClick={(e) => {
-                              if (!answerOpen) {
-                                e.preventDefault();
-                                setAnswerOpen(true);
-                              }
-                            }}
-                            className='w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition duration-200 mt-2'
-                          >
-                            {answerOpen ? "답변 제출" : "답변 작성하기"}
-                          </Button>
+                          <Form method="post" action="/room" className='flex flex-col' onSubmit={() => {
+                            if (answerOpen) {
+                              setIsAnswerSubmitted(true);
+                              setTimeout(() => {
+                                setModalOpen(false);
+                                setAnswerOpen(false);
+                                setIsAnswerSubmitted(false);
+                              }, 5000);
+                            }
+                          }}>
+                            <input type="hidden" name="letter_id" value={letterId} />
+                            <input type="hidden" name="intent" value="answer-letter" />
+                            <motion.textarea
+                              name="answer"
+                              placeholder="이 고민에 대한 당신의 답변을 작성해주세요..."
+                              className='border rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none w-full p-2 overflow-hidden'
+                              variants={textareaVariants}
+                              initial="hidden"
+                              animate={answerOpen ? "visible" : "hidden"}
+                              minLength={1}
+                              maxLength={1000}
+                              required
+                              rows={4}
+                              ref={textareaRef}
+                            />
+                            {errorMessage ? (
+                              errorMessage.answer ? (
+                                <Alert variant="destructive">
+                                  <AlertCircleIcon />
+                                  <AlertDescription className="text-xs" style={{ whiteSpace: 'pre-line' }}>{errorMessage.answer}</AlertDescription>
+                                </Alert>
+                              ) : errorMessage.sendingAnswer ? (
+                                <Alert variant="destructive">
+                                  <AlertCircleIcon />
+                                  <AlertDescription className="text-xs" style={{ whiteSpace: 'pre-line' }}>{errorMessage.sendingAnswer}</AlertDescription>
+                                </Alert>
+                              ) : null) : null}
+                            <motion.div
+                              className="w-full" 
+                              ref={writeAnswerButtonRef}
+                            >
+                              <Button
+                                type={answerOpen ? "submit" : "button"} 
+                                onClick={(e) => {
+                                  if (!answerOpen) {
+                                    e.preventDefault();
+                                    setAnswerOpen(true);
+                                  }
+                                }}
+                                className='w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-700 transition duration-200 mt-2'
+                              >
+                                {answerOpen ? "답변 제출" : "답변 작성하기"}
+                              </Button>
+                            </motion.div>
+                          </Form>
                         </motion.div>
-                      </Form>
-                    </motion.div>
-                  </div>
+                      </div>
+                    </>
+                  )}
                 </motion.div>
               </div>
             </Dialog.Content>

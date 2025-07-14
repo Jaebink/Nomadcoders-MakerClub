@@ -16,7 +16,7 @@ import { Alert, AlertDescription } from "~/common/components/ui/alert";
 import { z } from "zod";
 
 const formSchema = z.object({
-    answer: z.string().min(1).max(10),
+    answer: z.string().min(1).max(1000),
 });
 
 export const loader = async ({ request }: Route.LoaderArgs) => {
@@ -147,13 +147,12 @@ export const action = async ({ request }: Route.ActionArgs) => {
             return {
                 ok: false,
                 actionErrors: {
-                    answer: `답변 내용이 올바르지 않습니다\n(Error: ${error.flatten().fieldErrors.answer})`
+                    answer: `Error: ${error.flatten().fieldErrors.answer}`
                 },
                 intent: "answer-letter",
             };
         }
         try {
-            // throw new Error("test");
             await sendLetterAnswer(client, {
                 letterId: letterId,
                 responderId: userId,
@@ -164,7 +163,7 @@ export const action = async ({ request }: Route.ActionArgs) => {
             return { 
                 ok: false, 
                 actionErrors: {
-                    sendingAnswer: `편지 답변 중 오류 발생: ${sendingAnswerError.message || sendingAnswerError}`
+                    sendingAnswer: `편지 답변 전송 중 오류 발생: ${sendingAnswerError.message || sendingAnswerError}`
                 }, 
                 intent: "answer-letter",
             };
