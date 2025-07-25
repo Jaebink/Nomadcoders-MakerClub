@@ -1,0 +1,3 @@
+ALTER TABLE "letter_responses" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+CREATE POLICY "letter-response-select-policy" ON "letter_responses" AS PERMISSIVE FOR SELECT TO "authenticated" USING ((select auth.uid()) = "letter_responses"."responder_id");--> statement-breakpoint
+CREATE POLICY "letter-response-insert-policy" ON "letter_responses" AS PERMISSIVE FOR INSERT TO "authenticated" WITH CHECK ((select auth.uid()) = "letter_responses"."responder_id");

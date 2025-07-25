@@ -194,7 +194,7 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
 
     const [isReceiveOpen, setIsReceiveOpen] = useState(false);
 
-    const [letters, setLetters] = useState(loaderData.letters);
+    const [letters, setLetters] = useState<Database["public"]["Tables"]["concern_letters"]["Row"][]>(loaderData.letters);
 
     // 편지 애니메이션 상태 관리
     const STAR_ANIMATE_STATUS_KEY = 'star_animate_status';
@@ -246,7 +246,7 @@ export default function RoomPage({ loaderData, actionData }: Route.ComponentProp
 
     // 편지 전송
     const handleSubmit = async (e: React.FormEvent) => {
-        setIsSending(true)        
+        setIsSending(true)
     }
 
     // 구독으로 편지 수신 시 편지 목록 업데이트

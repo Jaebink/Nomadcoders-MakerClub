@@ -86,6 +86,29 @@ export const userChannels = pgTable("user_channels", {
     joined_at: timestamp().notNull().defaultNow(),
 }, (table) => [
     primaryKey({ columns: [table.user_id, table.channel_id] }),
+    pgPolicy("user-channel-select-policy", {
+        for: "select",
+        to: authenticatedRole,
+        as: "permissive",
+    }),
+    pgPolicy("user-channel-insert-policy", {
+        for: "insert",
+        to: authenticatedRole,
+        as: "permissive",
+        withCheck: sql`${authUid} = ${table.user_id}`,
+    }),
+    pgPolicy("user-channel-update-policy", {
+        for: "update",
+        to: authenticatedRole,
+        as: "permissive",
+        withCheck: sql`${authUid} = ${table.user_id}`,
+    }),
+    pgPolicy("user-channel-delete-policy", {
+        for: "delete",
+        to: authenticatedRole,
+        as: "permissive",
+        using: sql`${authUid} = ${table.user_id}`,
+    }),
 ]);
 
 export const userChannelsRelations = relations(userChannels, ({ one }) => ({
@@ -115,4 +138,29 @@ export const letter_responses = pgTable("letter_responses", {
     }).notNull(),
     response: text().notNull(),
     responded_at: timestamp().notNull().defaultNow(),
-});
+}, (table) => [
+    pgPolicy("letter-response-select-policy", {
+        for: "select",
+        to: authenticatedRole,
+        as: "permissive",
+        using: sql`${authUid} = ${table.responder_id}
+        OR EXISTS (
+            SELECT 1
+            FROM concern_letters
+            WHERE concern_letters.letter_id = ${table.letter_id}
+            AND concern_letters.sender_id = ${authUid}
+        )
+        OR EXISTS (
+            SELECT 1
+            FROM concern_letters
+            WHERE concern_letters.letter_id = ${table.letter_id}
+            AND concern_letters.receivers @> jsonb_build_array(jsonb_build_object('user_id', ${authUid}))
+        )`,
+    }),
+    pgPolicy("letter-response-insert-policy", {
+        for: "insert",
+        to: authenticatedRole,
+        as: "permissive",
+        withCheck: sql`${authUid} = ${table.responder_id}`,
+    }),
+]);

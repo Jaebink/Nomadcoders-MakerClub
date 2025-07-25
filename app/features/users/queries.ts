@@ -45,8 +45,9 @@ export const getLoggedInUserId = async (client: SupabaseClient<Database>) => {
 export const getLettersByReceiverId = async (client: SupabaseClient<Database>, { userId }: { userId : string }) => {
     const { data, error } = await client
         .from("concern_letters")
-        .select("*")
+        .select("*, letter_responses!left(letter_id)")
         .contains("receivers", JSON.stringify([{ user_id: userId }]))
+        .is("letter_responses.letter_id", null)
         .order("created_at", { ascending: true });
     if (error) {
         throw error;
